@@ -28,7 +28,7 @@ module.exports = {
     {
       name: '@electron-forge/maker-dmg',
       config: {
-        name: 'RSGO-batch',
+        name: 'Autodemo',
         overwrite: true,
       },
     },

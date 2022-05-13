@@ -1,5 +1,5 @@
 {
-  "name": "electron-ts-starter",
+  "name": "csgo-autodemo",
   "main": "./.webpack/main/index.js",
   "version": "0.0.1",
   "scripts": {
@@ -24,13 +24,14 @@
     "@mui/lab": "^5.0.0-alpha.81",
     "@mui/material": "^5.7.0",
     "@types/node": "^16.11.35",
+    "electron-log": "^4.4.7",
     "lodash": "^4.17.21",
     "pretty-ms": "^7.0.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-hot-loader": "^4.13.0",
     "react-use": "^17.3.2",
-    "electron-log": "^4.4.7"
+    "@node-steam/vdf": "^2.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.17.10",

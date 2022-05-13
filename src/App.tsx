@@ -1,9 +1,7 @@
-import { H1 } from "./components/common/typography";
+import { useAsync } from 'react-use';
 
 export function App() {
-  return (
-    <H1>
-      Hello world
-    </H1>
-  );
+  const state = useAsync(() => window.Main.config.read('csgoLocation'), []);
+
+  return <div>Csgo location: {state.value}</div>;
 }
