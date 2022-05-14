@@ -1,6 +1,4 @@
-export type ConfigSchema = {
-  csgoLocation: string;
-};
+export type ConfigSchema = Record<string, never>;
 
 export type Config = {
   read: <K extends keyof ConfigSchema>(
@@ -12,3 +10,8 @@ export type Config = {
   ) => Promise<void>;
   reset: () => Promise<void>;
 };
+
+export type MainWindowArg =
+  | 'gsiInstalled'
+  | 'netConPortNeedToCloseSteam'
+  | 'netConPortFailed';

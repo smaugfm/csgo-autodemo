@@ -1,17 +1,20 @@
 /// <reference types="@emotion/react/types/css-prop" />
-import "@fontsource/roboto";
-import { css, Global } from "@emotion/react";
-import { createRoot } from "react-dom/client";
-import { App } from "./App";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { useEffect, useMemo, useState } from "react";
-import { PaletteMode, Paper } from "@mui/material";
+import '@fontsource/roboto';
+import { css, Global } from '@emotion/react';
+import { createRoot } from 'react-dom/client';
+import { App } from './App';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { useEffect, useMemo, useState } from 'react';
+import { PaletteMode, Paper } from '@mui/material';
+import { GsiInstalled } from './components/prerequisites/GsiInstalled';
+import { PleaseCloseSteam } from './components/prerequisites/PleaseCloseSteam';
+import { FailedToSetNetConPort } from './components/prerequisites/FailedToSetNetConPort';
 
 function initialThemeMode(): PaletteMode {
   const isDark =
     window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
-  return isDark ? "dark" : "light";
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return isDark ? 'dark' : 'light';
 }
 
 export function Root() {
@@ -27,14 +30,14 @@ export function Root() {
         palette: {
           mode,
           primary: {
-            main: "#3F51B5"
+            main: '#3F51B5',
           },
           secondary: {
-            main: "#fbc02d"
-          }
-        }
+            main: '#fbc02d',
+          },
+        },
       }),
-    [mode]
+    [mode],
   );
 
   const globalStyles = css`
@@ -51,16 +54,24 @@ export function Root() {
   return (
     <ThemeProvider theme={theme}>
       <Global styles={globalStyles} />
-      <Paper css={css`
-        height: 100vh;
-        width: 100vw;
-      `}>
-        <App />
+      <Paper
+        css={css`
+          height: 100vh;
+          width: 100vw;
+        `}
+      >
+        <GsiInstalled>
+          <PleaseCloseSteam>
+            <FailedToSetNetConPort>
+              <App />
+            </FailedToSetNetConPort>
+          </PleaseCloseSteam>
+        </GsiInstalled>
       </Paper>
     </ThemeProvider>
   );
 }
 
-const container = document.getElementById("root");
+const container = document.getElementById('root');
 const root = createRoot(container!);
 root.render(<Root />);
