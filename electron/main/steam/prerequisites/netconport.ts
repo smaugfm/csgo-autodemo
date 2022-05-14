@@ -7,15 +7,28 @@ import SteamID from 'steamid';
 import { searchMatchingClosingBracket } from '../../../common/util';
 import { readLoginUsersVdf } from './vdf';
 
-export function readCurrentCsgoLaunchOptions(localConfigPath: string) {
+export function readCurrentCsgoLaunchOptions(
+  localConfigPath: string,
+): string | null {
   const content = fs.readFileSync(localConfigPath, 'utf-8');
   const indexOf730 = content.search(/"730"\s+{\s+"/gm);
+  if (indexOf730 < 0) {
+    log.error('Could not find CS:GO (id 730) entry in ', localConfigPath);
+    return null;
+  }
   const indexOfLaunchOptions = content.indexOf('LaunchOptions', indexOf730);
+  if (indexOfLaunchOptions < 0) {
+    log.info('CS:GO LaunchOptions are empty');
+    return '';
+  }
+
   const indexOfOptionsStart =
     content.indexOf('"', 'LaunchOptions'.length + indexOfLaunchOptions + 1) + 1;
   const indexOfOptionsEnd = content.indexOf('"', indexOfOptionsStart);
 
-  return content.substring(indexOfOptionsStart, indexOfOptionsEnd);
+  const result = content.substring(indexOfOptionsStart, indexOfOptionsEnd);
+  log.info('CS:GO LaunchOptions are ', result);
+  return result;
 }
 
 export function checkNetconportAlreadyPresent(
@@ -38,7 +51,7 @@ export function patchLocalConfig(
   const obj = parseVdf(entry);
   const inner = obj['730'];
   if (!has(inner, 'LaunchOptions')) {
-    return false;
+    inner.LaunchOptions = '';
   }
   if (has(inner, 'cloud.last_sync_state')) {
     delete inner.cloud.last_sync_state;

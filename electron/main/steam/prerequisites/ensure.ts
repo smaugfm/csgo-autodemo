@@ -29,16 +29,18 @@ export function ensureSteamPrerequisites(): MainWindowArg[] {
       if (localConfigFilePath) {
         const currentOptions =
           readCurrentCsgoLaunchOptions(localConfigFilePath);
-        if (!checkNetconportAlreadyPresent(currentOptions, netConPort)) {
-          if (checkSteamRunning()) {
-            mainWindowArgs.push('netConPortNeedToCloseSteam');
-          } else {
-            if (patchLocalConfig(localConfigFilePath, netConPort)) {
-              if (!verifyLocalConfig(localConfigFilePath, netConPort)) {
+        if (currentOptions !== null) {
+          if (!checkNetconportAlreadyPresent(currentOptions, netConPort)) {
+            if (checkSteamRunning()) {
+              mainWindowArgs.push('netConPortNeedToCloseSteam');
+            } else {
+              if (patchLocalConfig(localConfigFilePath, netConPort)) {
+                if (!verifyLocalConfig(localConfigFilePath, netConPort)) {
+                  mainWindowArgs.push('netConPortFailed');
+                }
+              } else {
                 mainWindowArgs.push('netConPortFailed');
               }
-            } else {
-              mainWindowArgs.push('netConPortFailed');
             }
           }
         }

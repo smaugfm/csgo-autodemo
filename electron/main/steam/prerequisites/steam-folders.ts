@@ -18,12 +18,15 @@ export function findSteamLocation() {
       break;
     case 'linux':
       candidate = path.join(process.env.HOME!, '.local/share/Steam/');
-      break;
+      throw new Error('Linux is not supported!');
     case 'win32':
       // "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam"
       // "HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam"
-      return null;
+      throw new Error('Win32 is not supported!');
+    default:
+      throw new Error(`Platform ${process.platform} is not supported`);
   }
+
   if (!fs.existsSync(candidate)) {
     log.error('Missing Steam installation folder at ', candidate);
     return null;
