@@ -34,13 +34,12 @@ async function createWindow() {
   });
   if (args.includes('gsiInstalled')) {
     gsiServer = new CsGoGsi(gsiPort, 'autodemo');
-    netconnection = new NetConnection();
+    netconnection = new NetConnection(netConPort);
+    netconnection.on('console', () => {
+      // empty
+    });
     gsiServer.on('all', state => {
       log.info('gsi: ', state);
-    });
-    await netconnection.connect(netConPort);
-    netconnection.on('console', message => {
-      log.info('netcon: ', message);
     });
   }
 
