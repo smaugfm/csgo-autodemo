@@ -18,5 +18,5 @@
     "strict": true,
     "jsxImportSource": "@emotion/react",
   },
-  "include": ["src", "electron"]
+  "include": ["src", "electron", "test"]
 }

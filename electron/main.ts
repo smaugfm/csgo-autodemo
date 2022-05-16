@@ -1,21 +1,31 @@
 import { app, BrowserWindow } from 'electron';
-import { setupThemeChangedEvent } from './main/themeChangedEvent';
+import { setupThemeChangedEvent } from './main/misc/theme';
 import log from 'electron-log';
 import { setupConfigMain } from './main/config';
 import { setupIpcMain } from './main/ipc';
-import { ensureSteamPrerequisites } from './main/steam/prerequisites/ensure';
-import { CsGoGsi } from './main/steam/gsi/CsGoGsi';
+import { ensureSteamPrerequisites } from './main/prerequisites/ensure';
+import { Gsi } from './main/gsi/Gsi';
 import { gsiPort, netConPort } from './common/types/misc';
 import TypedEmitter from 'typed-emitter';
-import { CsGoGsiEVents } from './main/steam/gsi/types';
-import { NetConnection } from './main/steam/netcon/NetConnection';
+import { CsGoGsiEVents } from './main/gsi/types';
+import { NetCon } from './main/netcon/NetCon';
+import { Autodemo } from './main/Autodemo';
+import { createStore } from './common/config';
 
-let mainWindow: BrowserWindow | null = null;
-let gsiServer: TypedEmitter<CsGoGsiEVents> | null = null;
-let netconnection: NetConnection | null = null;
+let mainWindow: BrowserWindow | undefined;
+let gsiServer: TypedEmitter<CsGoGsiEVents>;
+let netconnection: NetCon;
+let autodemo: Autodemo;
+
+const storePath = app.getPath('userData');
+log.info(`\n\nStore path: ${storePath}\n\n`);
+export const store = createStore(storePath);
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
+
+log.transports.console.level = 'info';
+log.transports.file.level = false;
 
 async function createWindow() {
   const args = ensureSteamPrerequisites();
@@ -33,20 +43,21 @@ async function createWindow() {
     },
   });
   if (args.includes('gsiInstalled')) {
-    gsiServer = new CsGoGsi(gsiPort, 'autodemo');
-    netconnection = new NetConnection(netConPort);
-    netconnection.on('console', () => {
-      // empty
-    });
+    gsiServer = new Gsi(gsiPort, 'autodemo');
+    netconnection = new NetCon(netConPort);
+    void netconnection.connect();
     gsiServer.on('all', state => {
       log.info('gsi: ', state);
     });
+    autodemo = new Autodemo(netconnection, gsiServer, () =>
+      store.read('demosPath'),
+    );
   }
 
   await mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   mainWindow.on('closed', () => {
-    mainWindow = null;
+    mainWindow = undefined;
   });
 }
 
@@ -56,7 +67,7 @@ app
   .then(() => {
     if (mainWindow) {
       setupThemeChangedEvent(mainWindow);
-      setupConfigMain();
+      setupConfigMain(store);
       setupIpcMain();
     }
   })

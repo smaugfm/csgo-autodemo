@@ -5,11 +5,9 @@ import TypedEmitter from 'typed-emitter';
 import { AddressInfo } from 'net';
 import { CsGoGsiEVents } from './types';
 
-export class CsGoGsi extends (EventEmitter as new () => TypedEmitter<CsGoGsiEVents>) {
+export class Gsi extends (EventEmitter as new () => TypedEmitter<CsGoGsiEVents>) {
   private readonly authToken;
   private readonly bombTime = 40;
-  private isBombPlanted;
-  private bombTimer?: NodeJS.Timer;
   private readonly app: Server;
 
   constructor(port: number, authToken: string) {
@@ -36,8 +34,6 @@ export class CsGoGsi extends (EventEmitter as new () => TypedEmitter<CsGoGsiEVen
     });
 
     this.bombTime = 40;
-    this.isBombPlanted = false;
-    this.bombTimer = undefined;
   }
 
   processJson(body: string) {
@@ -81,11 +77,6 @@ export class CsGoGsi extends (EventEmitter as new () => TypedEmitter<CsGoGsiEVen
         case 'freezetime':
           break;
         case 'over':
-          if (this.isBombPlanted) {
-            this.isBombPlanted = false;
-            this.stopC4Countdown();
-          }
-
           this.emit('roundWinTeam', data.round.win_team);
           break;
       }
@@ -94,48 +85,16 @@ export class CsGoGsi extends (EventEmitter as new () => TypedEmitter<CsGoGsiEVen
         this.emit('bombState', data.round.bomb);
         switch (data.round.bomb) {
           case 'planted':
-            if (!this.isBombPlanted) {
-              this.isBombPlanted = true;
-              const timeleft =
-                this.bombTime -
-                (new Date().getTime() / 1000 - data.provider.timestamp);
-              this.emit('bombTimeStart', timeleft);
-              this.startC4Countdown(timeleft);
-            }
-
+            this.emit('bombPlanted');
             break;
           case 'defused':
             this.emit('bombDefused');
-            this.isBombPlanted = false;
-            this.stopC4Countdown();
             break;
           case 'exploded':
             this.emit('bombExploded');
-            this.isBombPlanted = false;
-            this.stopC4Countdown();
             break;
         }
       }
     }
-  }
-
-  stopC4Countdown() {
-    if (this.bombTimer) {
-      clearInterval(this.bombTimer);
-      this.bombTimer = undefined;
-    }
-  }
-
-  startC4Countdown(timeLeft: number) {
-    this.bombTimer = setInterval(() => {
-      timeLeft = timeLeft - 1;
-      if (timeLeft <= 0) {
-        this.stopC4Countdown();
-        this.isBombPlanted = false;
-        return;
-      }
-
-      this.emit('bombTimeLeft', timeLeft);
-    }, 1000);
   }
 }

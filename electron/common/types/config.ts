@@ -1,9 +1,14 @@
-export type ConfigSchema = Record<string, never>;
+export type ModeMap = "competitive" | "casual" | "deathmatch" | "wingman";
+
+export type ConfigSchema = {
+  gameModes: ModeMap[];
+  demosPath: string;
+};
 
 export type Config = {
   read: <K extends keyof ConfigSchema>(
     key: K,
-  ) => Promise<Partial<ConfigSchema>[K]>;
+  ) => Promise<ConfigSchema[K]>;
   write: <K extends keyof ConfigSchema>(
     key: K,
     value: ConfigSchema[K],

@@ -4,7 +4,7 @@ import { parse as parseVdf, stringify as stringifyVdf } from '@node-steam/vdf';
 import { get, has, keys } from 'lodash';
 import log from 'electron-log';
 import SteamID from 'steamid';
-import { searchMatchingClosingBracket } from '../../../common/util';
+import { searchMatchingClosingBracket } from '../../common/util';
 import { readLoginUsersVdf } from './vdf';
 
 export function readCurrentCsgoLaunchOptions(

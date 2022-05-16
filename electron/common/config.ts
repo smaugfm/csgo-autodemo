@@ -29,9 +29,9 @@ export function createStore(folder: string, reset?: boolean): Config {
   };
 
   const store: Config = {
-    read: async key => {
+    read: async <K extends keyof ConfigSchema>(key: K) => {
       const data = await readStore();
-      return data?.[key];
+      return data?.[key] as ConfigSchema[K];
     },
     write: async (key, value) => {
       const exisingData = (await readStore()) ?? {};

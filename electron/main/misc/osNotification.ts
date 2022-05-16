@@ -2,11 +2,11 @@ import { Notification } from 'electron';
 import {
   DEFAULT_FIRE_NOTIFICATION_TIMEOUT,
   DEFAULT_NOTIFICATION_TIMEOUT,
-} from '../common/types/constants';
+} from '../../common/types/constants';
 import {
   ClosedNotificationError,
   NotificationTimeoutError,
-} from '../common/types/errors';
+} from '../../common/types/errors';
 import log from 'electron-log';
 
 export type NotificationRequest = {
@@ -18,7 +18,7 @@ export type NotificationRequest = {
 };
 
 export function fireOsNotification(message: string, noTimeout?: boolean) {
-  void sendOsNotification({
+  void osNotification({
     message,
     ignoreTimeout: true,
     timeout: noTimeout
@@ -27,7 +27,7 @@ export function fireOsNotification(message: string, noTimeout?: boolean) {
   });
 }
 
-export async function sendOsNotification(
+export async function osNotification(
   message: NotificationRequest | string,
 ): Promise<
   typeof message extends NotificationRequest

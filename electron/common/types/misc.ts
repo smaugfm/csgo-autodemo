@@ -10,3 +10,8 @@ export type SpinWaitResult<T> =
       status: 'spin';
       result: boolean;
     };
+
+export type Promisify<T> = {
+  [K in keyof T]: Promise<T[K]>;
+};
+

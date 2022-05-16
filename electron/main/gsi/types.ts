@@ -12,8 +12,7 @@ export type CsGoGsiEVents = {
   roundPhase: (phase: Required<GameState>['round']['phase']) => void;
   roundWinTeam: (winTeam: Required<GameState>['round']['win_team']) => void;
   bombState: (bomb: Required<GameState>['round']['bomb']) => void;
-  bombTimeStart: (timeLeft: number) => void;
-  bombTimeLeft: (timeLeft: number) => void;
+  bombPlanted: () => void;
   bombDefused: () => void;
   bombExploded: () => void;
 };

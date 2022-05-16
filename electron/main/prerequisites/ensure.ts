@@ -8,9 +8,9 @@ import {
   readCurrentCsgoLaunchOptions,
   verifyLocalConfig,
 } from './netconport';
-import { netConPort } from '../../../common/types/misc';
-import { checkSteamRunning } from '../../os';
-import { MainWindowArg } from '../../../common/types/config';
+import { netConPort } from '../../common/types/misc';
+import { checkSteamRunning } from '../misc/os';
+import { MainWindowArg } from '../../common/types/config';
 
 export function ensureSteamPrerequisites(): MainWindowArg[] {
   const mainWindowArgs: MainWindowArg[] = [];

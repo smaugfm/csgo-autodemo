@@ -1,6 +1,6 @@
 import { ipcMain, dialog } from 'electron';
 import path from 'path';
-import { gsiFileName, installGsiFileTo } from './steam/prerequisites/gsi';
+import { gsiFileName, installGsiFileTo } from './prerequisites/gsi';
 
 export function setupIpcMain() {
   ipcMain.handle('saveGsiFileDialog', async () => {
