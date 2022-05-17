@@ -31,6 +31,7 @@
   "rules": {
     "react/prop-types": "off",
     "no-console": "warn",
+    "no-control-regex": "off",
     "no-void": "off",
     "react/jsx-uses-react": "off",
     "react/react-in-jsx-scope": "off",

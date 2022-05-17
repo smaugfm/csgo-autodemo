@@ -1,14 +1,15 @@
 import EventEmitter from 'events';
-import { Telnet } from 'telnet-client';
 import waitOn from 'wait-on';
 import log from 'electron-log';
 import TypedEmitter from 'typed-emitter';
 import { NetConEvents } from './types';
+import { delay } from '../../common/util';
+import { SendOptions, Telnet } from '../../telnet-client/telnet-client';
 
 export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents>) {
   private connection: Telnet | null = null;
   private interval: NodeJS.Timeout | null = null;
-  private isStopping: boolean = false;
+  private isStopping = false;
   private readonly port: number;
 
   constructor(port: number) {
@@ -16,11 +17,12 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
     this.port = port;
   }
 
-  public connect(): Promise<void> {
+  public async connect(): Promise<void> {
     this.reconnect();
-    return new Promise<void>(resolve => {
+    await new Promise<void>(resolve => {
       this.on('connected', resolve);
     });
+    await delay(500);
   }
 
   public get connected() {
@@ -28,25 +30,60 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
   }
 
   public async echo(message: string) {
-    log.info(`netcon[echo] ${message}`);
-    await this.sendCommand(`echo ${message}`);
+    log.info(`[echo] ${message}`);
+    await this.sendCommand(`echo ${message}`, message);
   }
 
-  public recordDemo = async (
-    demoName: string,
-    listener?: (message: string) => void,
-  ) => {
-    return this.sendCommand(`record "${demoName}"`, listener);
+  public recordDemo = async (demoName: string) => {
+    log.info(`[netcon] record ${demoName}`);
+    return this.sendCommand(`record ${demoName}`, message => {
+      const alreadyRecording = 'Already recording.';
+      const waitForRoundOver =
+        'Please start demo recording after current round is over.';
+      const successRegex = /^Recording to (.*?)\.dem\.\.\.$/;
+
+      const match = message.match(successRegex);
+      if (
+        message === alreadyRecording ||
+        message === waitForRoundOver ||
+        !match
+      ) {
+        log.error(`[netcon] record ${demoName}: ${message}`);
+        return false;
+      }
+
+      const recordingDemoName = match[1];
+      if (recordingDemoName !== demoName) {
+        log.error(`[netcon] record ${demoName}. Wrong demo name: ${message}`);
+        return false;
+      }
+      return true;
+    });
   };
 
-  public async stopRecordingDemo(listener?: (message: string) => void) {
-    return this.sendCommand(`stop`, listener);
+  public async stopRecordingDemo() {
+    log.info('[netcon] stop');
+    return this.sendCommand('stop', message => {
+      const successRegex =
+        /^Completed demo, recording time (.*?), game frames (.*?)\.$/;
+      const stopAtRoundEnd =
+        'Demo recording will stop as soon as the round is over.';
+      const recordInDemo = "Can't record during demo playback.";
+
+      const match = message.match(successRegex);
+      if (message === stopAtRoundEnd || message === recordInDemo || !match) {
+        log.error(`[netcon]: stop: ${message}`);
+        return false;
+      }
+
+      return true;
+    });
   }
 
   private setupDataHandler(connection: Telnet) {
     connection.on('data', data => {
       const message = data.toString('utf8').trim();
-      log.debug('netcon[console]: ', message);
+      log.debug('[console]: ', message);
       this.emit('console', message);
     });
   }
@@ -90,7 +127,8 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
       await this.connection.connect({
         host: '127.0.0.1',
         port: this.port,
-        execTimeout: 500,
+        sendTimeout: 1000,
+        newlineReplace: '',
         negotiationMandatory: false,
         timeout: 500,
       });
@@ -121,22 +159,17 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
     } else return Promise.resolve();
   }
 
-  private async sendCommand(
-    command: string,
-    listener?: (message: string) => void,
-  ) {
+  private async sendCommand(command: string, waitFor?: SendOptions['waitFor']) {
     if (!this.connection) {
-      log.info(`NetCon is disconnected: cannot send command ${command}`);
+      log.info(`[netcon]: cannot send command ${command} as socket is null`);
       return;
     }
-    //
-    // if (listener) this.on('console', listener);
-    //
     try {
-      return await this.connection.exec(command);
+      return await this.connection.send(command, {
+        waitFor,
+      });
     } catch (e) {
-      log.error('NetCon: error sending command', command, e);
-      // if (listener) this.removeListener('console', listener);
+      log.error('[netcon]: error sending command', command, e);
     }
   }
 }
