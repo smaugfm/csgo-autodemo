@@ -3,9 +3,9 @@ import log from 'electron-log';
 import EventEmitter from 'events';
 import TypedEmitter from 'typed-emitter';
 import { AddressInfo } from 'net';
-import { CsGoGsiEVents } from './types';
+import { GsiEvents } from './types';
 
-export class Gsi extends (EventEmitter as new () => TypedEmitter<CsGoGsiEVents>) {
+export class Gsi extends (EventEmitter as new () => TypedEmitter<GsiEvents>) {
   private readonly authToken;
   private readonly bombTime = 40;
   private readonly app: Server;

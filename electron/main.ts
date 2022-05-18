@@ -7,15 +7,14 @@ import { ensureSteamPrerequisites } from './main/prerequisites/ensure';
 import { Gsi } from './main/gsi/Gsi';
 import { gsiPort, netConPort } from './common/types/misc';
 import TypedEmitter from 'typed-emitter';
-import { CsGoGsiEVents } from './main/gsi/types';
+import { GsiEvents } from './main/gsi/types';
 import { NetCon } from './main/netcon/NetCon';
-import { Autodemo } from './main/Autodemo';
+import { autodemo } from './main/Autodemo';
 import { createStore } from './common/config';
 
 let mainWindow: BrowserWindow | undefined;
-let gsiServer: TypedEmitter<CsGoGsiEVents>;
+let gsiServer: TypedEmitter<GsiEvents>;
 let netconnection: NetCon;
-let autodemo: Autodemo;
 
 const storePath = app.getPath('userData');
 log.info(`\n\nStore path: ${storePath}\n\n`);
@@ -28,7 +27,7 @@ log.transports.console.level = 'info';
 log.transports.file.level = false;
 
 async function createWindow() {
-  const args = ensureSteamPrerequisites();
+  const errors = ensureSteamPrerequisites();
   mainWindow = new BrowserWindow({
     width: 1200,
     minWidth: 900,
@@ -38,20 +37,15 @@ async function createWindow() {
       devTools: true,
       nodeIntegration: false,
       contextIsolation: true,
-      additionalArguments: args,
+      additionalArguments: errors,
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     },
   });
-  if (args.includes('gsiInstalled')) {
+  if (errors.length === 0) {
     gsiServer = new Gsi(gsiPort, 'autodemo');
     netconnection = new NetCon(netConPort);
-    void netconnection.connect();
-    gsiServer.on('all', state => {
-      log.info('gsi: ', state);
-    });
-    autodemo = new Autodemo(netconnection, gsiServer, () =>
-      store.read('demosPath'),
-    );
+    void netconnection.setupConnectionLoop();
+    autodemo(netconnection, gsiServer, () => store.read('demosPath'));
   }
 
   await mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);

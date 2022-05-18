@@ -1,6 +1,6 @@
 import { GameState } from 'csgo-gsi-types';
 
-export type CsGoGsiEVents = {
+export type GsiEvents = {
   all: (data: GameState) => void;
   gameMap: (name: Required<GameState>['map']['name']) => void;
   gamePhase: (phase: Required<GameState>['map']['phase']) => void;

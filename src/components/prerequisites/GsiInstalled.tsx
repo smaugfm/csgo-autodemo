@@ -6,7 +6,7 @@ import { PrerequisitesModal } from './PrerequisitesModal';
 export function GsiInstalled(props: PropsWithChildren<unknown>) {
   return (
     <PrerequisitesModal
-      state={!window.Main.gsiInstalled}
+      state={window.Main.gsiNotInstalled}
       text={
         <>
           Failed to locate CS:GO installation. <br />

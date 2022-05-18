@@ -17,8 +17,8 @@ export function ensureSteamPrerequisites(): MainWindowArg[] {
 
   const steamLocation = findSteamLocation();
   if (steamLocation) {
-    if (ensureGsiFile(steamLocation)) {
-      mainWindowArgs.push('gsiInstalled');
+    if (!ensureGsiFile(steamLocation)) {
+      mainWindowArgs.push('gsiNotInstalled');
     }
     const lastLoggedInUser = getLastLoggedInUserId(steamLocation);
     if (lastLoggedInUser) {

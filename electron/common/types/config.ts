@@ -1,4 +1,4 @@
-export type ModeMap = "competitive" | "casual" | "deathmatch" | "wingman";
+export type ModeMap = 'competitive' | 'casual' | 'deathmatch' | 'wingman';
 
 export type ConfigSchema = {
   gameModes: ModeMap[];
@@ -6,9 +6,7 @@ export type ConfigSchema = {
 };
 
 export type Config = {
-  read: <K extends keyof ConfigSchema>(
-    key: K,
-  ) => Promise<ConfigSchema[K]>;
+  read: <K extends keyof ConfigSchema>(key: K) => Promise<ConfigSchema[K]>;
   write: <K extends keyof ConfigSchema>(
     key: K,
     value: ConfigSchema[K],
@@ -17,6 +15,6 @@ export type Config = {
 };
 
 export type MainWindowArg =
-  | 'gsiInstalled'
+  | 'gsiNotInstalled'
   | 'netConPortNeedToCloseSteam'
   | 'netConPortFailed';

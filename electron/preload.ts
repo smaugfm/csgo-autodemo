@@ -7,7 +7,7 @@ export const api = {
   theming,
   config,
   ipc: setupIpcRenderer(),
-  gsiInstalled: process.argv.includes('gsiInstalled'),
+  gsiNotInstalled: process.argv.includes('gsiNotInstalled'),
   netConPortNeedToCloseSteam: process.argv.includes(
     'netConPortNeedToCloseSteam',
   ),

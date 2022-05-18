@@ -8,7 +8,6 @@ import { SendOptions, Telnet } from '../../telnet-client/telnet-client';
 
 export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents>) {
   private connection: Telnet | null = null;
-  private interval: NodeJS.Timeout | null = null;
   private isStopping = false;
   private readonly port: number;
 
@@ -17,7 +16,7 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
     this.port = port;
   }
 
-  public async connect(): Promise<void> {
+  public async setupConnectionLoop(): Promise<void> {
     this.reconnect();
     await new Promise<void>(resolve => {
       this.on('connected', resolve);
@@ -34,7 +33,7 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
     await this.sendCommand(`echo ${message}`, message);
   }
 
-  public recordDemo = async (demoName: string) => {
+  public async recordDemo(demoName: string) {
     log.info(`[netcon] record ${demoName}`);
     return this.sendCommand(`record ${demoName}`, message => {
       const alreadyRecording = 'Already recording.';
@@ -59,7 +58,7 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
       }
       return true;
     });
-  };
+  }
 
   public async stopRecordingDemo() {
     log.info('[netcon] stop');
@@ -108,49 +107,49 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
 
     log.info('[netcon]: connecting...');
     this.emit('connecting');
-    const tryConnect = async () => {
-      try {
-        await waitOn({
-          resources: [`tcp:${this.port}`],
-          interval: 500,
-          timeout: 1000,
+    const connectionLoop = () => {
+      const tryConnect = async () => {
+        try {
+          log.debug('[netcon]: waitOn');
+          await waitOn({
+            resources: [`tcp:${this.port}`],
+            interval: 500,
+            timeout: 1000,
+          });
+        } catch (e) {
+          log.debug('[netcon]: waitOn timed out');
+          return !this.isStopping;
+        }
+        if (this.isStopping) return false;
+
+        this.connection = new Telnet();
+
+        this.setupOtherHandlers(this.connection);
+
+        await this.connection.connect({
+          host: '127.0.0.1',
+          port: this.port,
+          sendTimeout: 1000,
+          newlineReplace: '',
+          negotiationMandatory: false,
+          timeout: 500,
         });
-      } catch (e) {
+
+        this.setupDataHandler(this.connection);
+
         return false;
-      }
-      if (this.isStopping) return false;
+      };
 
-      this.connection = new Telnet();
-
-      this.setupOtherHandlers(this.connection);
-
-      await this.connection.connect({
-        host: '127.0.0.1',
-        port: this.port,
-        sendTimeout: 1000,
-        newlineReplace: '',
-        negotiationMandatory: false,
-        timeout: 500,
+      tryConnect().then(x => {
+        if (x) setTimeout(connectionLoop, 1500);
       });
-
-      this.setupDataHandler(this.connection);
-
-      if (this.interval) {
-        clearInterval(this.interval);
-        this.interval = null;
-      }
-      return true;
     };
 
-    if (!tryConnect()) this.interval = setInterval(tryConnect, 1500);
+    connectionLoop();
   }
 
   public async stop(): Promise<void> {
     this.isStopping = true;
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = null;
-    }
     await this.connection?.end();
     if (this.connected) {
       return new Promise<void>(resolve => {
@@ -165,7 +164,7 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
       return;
     }
     try {
-      return await this.connection.send(command, {
+      await this.connection.send(command, {
         waitFor,
       });
     } catch (e) {
