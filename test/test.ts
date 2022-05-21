@@ -34,13 +34,36 @@ test('Netcon record demo test', { skip: true }, async t => {
   await stop(t, netcon);
 });
 
-test('Netcon records and stops when game started and ends', async t => {
+test(
+  'Netcon records and stops when game started and ends',
+  { skip: true },
+  async t => {
+    const mockedNetCon = mock(NetCon);
+    when(mockedNetCon.recordDemo(anyString())).thenResolve();
+    when(mockedNetCon.stopRecordingDemo()).thenResolve();
+    const gsi = new TestEventEmitter();
+
+    autodemo(instance(mockedNetCon), gsi as any, 'vasa');
+    await gsi.emitAwait('gamePhase', 'live');
+    await gsi.emitAwait('gamePhase', 'gameover');
+
+    verify(mockedNetCon.recordDemo(anyString())).once();
+    verify(mockedNetCon.stopRecordingDemo()).once();
+
+    t.end();
+  },
+);
+
+test('Netcon continues recording on disconnect', { skip: true }, async t => {
   const mockedNetCon = mock(NetCon);
   when(mockedNetCon.recordDemo(anyString())).thenResolve();
   when(mockedNetCon.stopRecordingDemo()).thenResolve();
   const gsi = new TestEventEmitter();
 
-  autodemo(instance(mockedNetCon), gsi as any, async () => 'vasa');
+  const netcon = instance(mockedNetCon);
+  autodemo(netcon, gsi as any, 'vasa');
+  await gsi.emitAwait('gamePhase', 'live');
+  await netcon.stop();
   await gsi.emitAwait('gamePhase', 'live');
   await gsi.emitAwait('gamePhase', 'gameover');
 

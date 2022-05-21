@@ -1,7 +1,7 @@
 module.exports = {
   packagerConfig: {
     icon: 'assets/app',
-    extraResource: ['assets/app.png', 'assets/app.svg'],
+    extraResource: ['assets/app.png', 'assets/app@2x.png', 'assets/app.svg'],
   },
   plugins: [
     [

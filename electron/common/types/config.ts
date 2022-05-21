@@ -1,8 +1,5 @@
-export type ModeMap = 'competitive' | 'casual' | 'deathmatch' | 'wingman';
-
 export type ConfigSchema = {
-  gameModes: ModeMap[];
-  demosPath: string;
+  dummy: boolean;
 };
 
 export type Config = {

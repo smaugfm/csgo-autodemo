@@ -1,15 +1,11 @@
 import * as fs from 'fs';
 import path from 'path';
 import log from 'electron-log';
-import { locateCsgoFolder } from './steam-folders';
 
 export const gsiFileName = 'gamestate_integration_autodemo.cfg';
 const gsiLocationInCsGoFolder = ['csgo', 'cfg'];
 
-export function ensureGsiFile(steamLocation: string): boolean {
-  const csgoFolder = locateCsgoFolder(steamLocation);
-  if (!csgoFolder) return false;
-
+export function ensureGsiFile(csgoFolder: string): boolean {
   const gsiFileFolder = path.join(csgoFolder, ...gsiLocationInCsGoFolder);
   if (!fs.existsSync(gsiFileFolder)) {
     log.error('Missing cfg folder in CS:GO folder ', gsiFileFolder);

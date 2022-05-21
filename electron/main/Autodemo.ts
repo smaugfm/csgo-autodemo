@@ -8,7 +8,7 @@ import { GsiEvents } from './gsi/types';
 export function autodemo(
   netCon: NetCon,
   gsi: TypedEmitter<GsiEvents>,
-  demosPath: () => Promise<string>,
+  demosPath: string,
 ) {
   let lastMap = '';
   let gameLive = false;
@@ -36,7 +36,7 @@ export function autodemo(
         break;
     }
 
-    const demoName = await buildDemoName(lastMap, await demosPath());
+    const demoName = await buildDemoName(lastMap, demosPath);
 
     if (!wasGameLive && gameLive) {
       try {

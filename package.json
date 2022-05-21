@@ -1,10 +1,11 @@
 {
   "name": "csgo-autodemo",
-  "main": "./.webpack/main/index.js",
+  "main": "./.webpack/main",
   "version": "0.0.1",
   "scripts": {
     "start": "electron-forge start",
     "tsc": "tsc",
+    "make": "yarn icon-gen && electron-forge make",
     "test": "webpack --config webpack/test.webpack.js && node .webpack/test/test.js",
     "icon-gen": "icon-gen -i assets/app.svg -o ./assets --icns --icns-name app",
     "lint": "eslint . --fix --ext '.js,.jsx,.ts,.tsx' && tsc",

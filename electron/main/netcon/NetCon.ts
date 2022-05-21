@@ -42,11 +42,12 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
       const successRegex = /^Recording to (.*?)\.dem\.\.\.$/;
 
       const match = message.match(successRegex);
-      if (
-        message === alreadyRecording ||
-        message === waitForRoundOver ||
-        !match
-      ) {
+
+      if (message === alreadyRecording) {
+        log.warn(`[netcon] record: ${message}`);
+        return true;
+      }
+      if (message === waitForRoundOver || !match) {
         log.error(`[netcon] record ${demoName}: ${message}`);
         return false;
       }

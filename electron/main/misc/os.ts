@@ -1,6 +1,10 @@
 import { execSync } from 'child_process';
 import log from 'electron-log';
 
+export function isDev() {
+  return process.env.NODE_ENV !== 'production';
+}
+
 export function checkSteamRunning(): boolean {
   let steamRunning: boolean;
 

@@ -1,4 +1,4 @@
-import { findSteamLocation } from './steam-folders';
+import { findSteamLocation, locateCsgoFolder } from './steam-folders';
 import { ensureGsiFile } from './gsi';
 import {
   checkNetconportAlreadyPresent,
@@ -12,12 +12,14 @@ import { netConPort } from '../../common/types/misc';
 import { checkSteamRunning } from '../misc/os';
 import { MainWindowArg } from '../../common/types/config';
 
-export function ensureSteamPrerequisites(): MainWindowArg[] {
+export function ensureSteamPrerequisites(): [MainWindowArg[], string | null] {
   const mainWindowArgs: MainWindowArg[] = [];
 
   const steamLocation = findSteamLocation();
+  let csgoFolder: string | null = null;
   if (steamLocation) {
-    if (!ensureGsiFile(steamLocation)) {
+    csgoFolder = locateCsgoFolder(steamLocation);
+    if (!csgoFolder || !ensureGsiFile(csgoFolder)) {
       mainWindowArgs.push('gsiNotInstalled');
     }
     const lastLoggedInUser = getLastLoggedInUserId(steamLocation);
@@ -48,5 +50,5 @@ export function ensureSteamPrerequisites(): MainWindowArg[] {
     }
   }
 
-  return mainWindowArgs;
+  return [mainWindowArgs, csgoFolder];
 }
