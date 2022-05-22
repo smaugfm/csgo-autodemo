@@ -29,14 +29,14 @@ export function findSteamLocation() {
 
   if (!fs.existsSync(candidate)) {
     log.error('Missing Steam installation folder at ', candidate);
-    return null;
+    return undefined;
   } else {
     log.info('Discovered Steam installation folder ', candidate);
     return candidate;
   }
 }
 
-export function locateCsgoFolder(steamLocation: string): string | null {
+export function locateCsgoFolder(steamLocation: string): string | undefined {
   const libraryFolders = readLibraryFoldersVdf(steamLocation);
   const candidate = libraryFolders.find((x: SteamLibraryFolder) =>
     keys(x.apps).includes(csgoAppId.toString()),
@@ -47,7 +47,7 @@ export function locateCsgoFolder(steamLocation: string): string | null {
       'Failed to find CS:GO (id 730) in any of the library folders',
       libraryFolders.map(x => JSON.stringify(x)).join(', '),
     );
-    return null;
+    return undefined;
   }
 
   const csgoPath = path.join(
@@ -55,10 +55,11 @@ export function locateCsgoFolder(steamLocation: string): string | null {
     'steamapps',
     'common',
     'Counter-Strike Global Offensive',
+    'csgo',
   );
   if (!fs.existsSync(csgoPath)) {
     log.error('CS:GO folder does not exist', csgoPath);
-    return null;
+    return undefined;
   }
 
   return csgoPath;

@@ -3,7 +3,8 @@ import log from 'electron-log';
 import EventEmitter from 'events';
 import TypedEmitter from 'typed-emitter';
 import { AddressInfo } from 'net';
-import { GsiEvents } from './types';
+import { GsiEvents, ModeMap } from './types';
+import { GameState } from 'csgo-gsi-types';
 
 export class Gsi extends (EventEmitter as new () => TypedEmitter<GsiEvents>) {
   private readonly authToken;
@@ -38,7 +39,7 @@ export class Gsi extends (EventEmitter as new () => TypedEmitter<GsiEvents>) {
 
   processJson(body: string) {
     try {
-      const data = JSON.parse(body);
+      const data = JSON.parse(body) as Partial<GameState>;
       if (!this.isAuthenticated(data)) {
         log.error('GSI: Unauthenticated POST request ', data);
         return;
@@ -55,9 +56,10 @@ export class Gsi extends (EventEmitter as new () => TypedEmitter<GsiEvents>) {
     return data.auth.token === this.authToken;
   }
 
-  process(data: any) {
+  process(data: Partial<GameState>) {
     if (data.map) {
       this.emit('gameMap', data.map.name);
+      this.emit('gameMode', data.map.mode as ModeMap);
       this.emit('gamePhase', data.map.phase); // warmup etc
       this.emit('gameRounds', data.map.round);
       this.emit('gameCTscore', data.map.team_ct);

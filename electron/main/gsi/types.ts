@@ -1,8 +1,11 @@
 import { GameState } from 'csgo-gsi-types';
 
+export type ModeMap = 'scrimcomp2v2' | 'casual' | 'deathmatch' | 'competitive';
+
 export type GsiEvents = {
-  all: (data: GameState) => void;
+  all: (data: Partial<GameState>) => void;
   gameMap: (name: Required<GameState>['map']['name']) => void;
+  gameMode: (name: ModeMap) => void;
   gamePhase: (phase: Required<GameState>['map']['phase']) => void;
   gameRounds: (round: Required<GameState>['map']['round']) => void;
   gameCTscore: (team: Required<GameState>['map']['team_ct']) => void;

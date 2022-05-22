@@ -1,4 +1,4 @@
-import { app, shell, nativeImage, Menu, BrowserWindow, Tray } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import { setupThemeChangedEvent } from './main/misc/theme';
 import log from 'electron-log';
 import { setupConfigMain } from './main/config';
@@ -9,16 +9,34 @@ import { gsiPort, netConPort } from './common/types/misc';
 import TypedEmitter from 'typed-emitter';
 import { GsiEvents } from './main/gsi/types';
 import { NetCon } from './main/netcon/NetCon';
-import { autodemo } from './main/Autodemo';
+import { Autodemo } from './main/autodemo/autodemo';
 import { createStore } from './common/config';
 import path from 'path';
 import { isDev } from './common/util';
 import { setupMenu } from './main/misc/menu';
+import {
+  findSteamLocation,
+  locateCsgoFolder,
+} from './main/prerequisites/steam-folders';
+import { AutodemoTray } from './main/tray/AutodemoTray';
 
-let mainWindow: BrowserWindow | undefined;
-let tray: Tray | undefined;
-let gsiServer: TypedEmitter<GsiEvents>;
-let netconnection: NetCon;
+const global: Partial<{
+  mainWindow: BrowserWindow;
+  tray: AutodemoTray;
+  csgoPath: string;
+  gsiServer: TypedEmitter<GsiEvents>;
+  netconnection: NetCon;
+  autodemo: Autodemo;
+}> = {
+  mainWindow: undefined,
+  csgoPath: undefined,
+  tray: undefined,
+  gsiServer: undefined,
+  netconnection: undefined,
+  autodemo: undefined,
+};
+
+log.info(`${app.getName()} version ${app.getVersion()}`);
 
 const storePath = app.getPath('userData');
 log.info(`\n\nStore path: ${storePath}\n\n`);
@@ -47,34 +65,22 @@ app.setAboutPanelOptions({
 
 setupMenu();
 
-function createTray() {
-  const image = nativeImage.createFromPath(iconPath);
-  const tray = new Tray(image);
-  const menu = Menu.buildFromTemplate([
-    { label: 'About Autodemo', role: 'about' },
-    {
-      label: 'Show Log',
-      click: () => shell.showItemInFolder(log.transports.file.getFile().path),
-    },
-    { label: 'Quit Autodemo', role: 'quit' },
-  ]);
-  tray.setToolTip('Autodemo');
-  tray.setContextMenu(menu);
-
-  return tray;
-}
-
 async function createWindow() {
-  const [errors, csgoFolder] = ensureSteamPrerequisites();
+  const steamLocation = findSteamLocation();
+  if (steamLocation) {
+    global.csgoPath = locateCsgoFolder(steamLocation);
+  }
+
+  const errors = ensureSteamPrerequisites(steamLocation, global.csgoPath);
   if (errors.length === 0) {
-    gsiServer = new Gsi(gsiPort, 'autodemo');
-    netconnection = new NetCon(netConPort);
-    void netconnection.setupConnectionLoop();
-    if (csgoFolder)
-      autodemo(
-        netconnection,
-        gsiServer,
-        path.join(csgoFolder, 'csgo', 'autodemo'),
+    global.gsiServer = new Gsi(gsiPort, 'autodemo');
+    global.netconnection = new NetCon(netConPort);
+    void global.netconnection.setupConnectionLoop();
+    if (global.csgoPath)
+      global.autodemo = new Autodemo(
+        global.netconnection,
+        global.gsiServer,
+        global.csgoPath,
       );
     const window = new BrowserWindow({
       width: 300,
@@ -116,8 +122,7 @@ async function createWindow() {
     await window.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
     window.on('closed', () => {
-      mainWindow = undefined;
-      log.silly(mainWindow);
+      global.mainWindow = undefined;
     });
     return window;
   }
@@ -126,12 +131,10 @@ async function createWindow() {
 app
   .whenReady()
   .then(async () => {
-    tray = await createTray();
-    const mainWindow = await createWindow();
-    log.silly(tray);
-    log.silly(mainWindow);
+    global.mainWindow = await createWindow();
+    global.tray = new AutodemoTray(iconPath, global.csgoPath, global.autodemo);
 
-    setupThemeChangedEvent(mainWindow);
+    setupThemeChangedEvent(global.mainWindow);
     setupConfigMain(store);
     setupIpcMain();
   })

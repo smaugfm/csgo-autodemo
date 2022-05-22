@@ -3,7 +3,7 @@ import path from 'path';
 import log from 'electron-log';
 
 export const gsiFileName = 'gamestate_integration_autodemo.cfg';
-const gsiLocationInCsGoFolder = ['csgo', 'cfg'];
+const gsiLocationInCsGoFolder = ['cfg'];
 
 export function ensureGsiFile(csgoFolder: string): boolean {
   const gsiFileFolder = path.join(csgoFolder, ...gsiLocationInCsGoFolder);

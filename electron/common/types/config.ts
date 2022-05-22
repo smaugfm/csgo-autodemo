@@ -12,6 +12,8 @@ export type Config = {
 };
 
 export type MainWindowArg =
+  | 'failedToFindSteam'
+  | 'failedToFindCsGo'
   | 'gsiNotInstalled'
   | 'netConPortNeedToCloseSteam'
   | 'netConPortFailed';
