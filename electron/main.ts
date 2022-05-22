@@ -13,7 +13,11 @@ import { Autodemo } from './main/autodemo/autodemo';
 import { createStore } from './common/config';
 import path from 'path';
 import { isDev } from './common/util';
-import { setupMenu } from './main/misc/menu';
+import {
+  setupAboutPanel,
+  setupLaunchAtLogin,
+  setupMenu,
+} from './main/misc/app';
 import {
   findSteamLocation,
   locateCsgoFolder,
@@ -53,7 +57,9 @@ const assetsPath = isDev()
   : process.resourcesPath;
 const iconPath = path.join(assetsPath, 'app.png');
 
-setupMenu(iconPath);
+setupMenu();
+setupAboutPanel(iconPath);
+setupLaunchAtLogin();
 
 async function createWindow() {
   const steamLocation = findSteamLocation();

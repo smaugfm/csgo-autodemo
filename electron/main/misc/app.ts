@@ -1,6 +1,14 @@
 import { app, Menu, MenuItemConstructorOptions } from 'electron';
+import { isDev } from './os';
 
-export function setupMenu(iconPath: string) {
+export function setupLaunchAtLogin() {
+  const options = app.getLoginItemSettings();
+  if (!options.openAtLogin && !isDev()) {
+    app.setLoginItemSettings({ openAtLogin: true });
+  }
+}
+
+export function setupAboutPanel(iconPath: string) {
   app.setAboutPanelOptions({
     applicationName: app.getName(),
     applicationVersion: app.getVersion(),
@@ -11,7 +19,9 @@ export function setupMenu(iconPath: string) {
     version: `Electron 18.2.3`,
     iconPath,
   });
+}
 
+export function setupMenu() {
   if (process.platform === 'darwin') {
     const template: MenuItemConstructorOptions[] = [
       {
