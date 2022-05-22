@@ -13,6 +13,10 @@ export function autodemo(
   let lastMap = '';
   let gameLive = false;
 
+  netCon.on('disconnected', () => {
+    gameLive = false;
+    lastMap = '';
+  });
   gsi.on('gameMap', name => {
     log.debug(`gameMap: ${name}`);
     lastMap = name;
