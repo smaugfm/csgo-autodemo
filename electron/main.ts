@@ -53,17 +53,7 @@ const assetsPath = isDev()
   : process.resourcesPath;
 const iconPath = path.join(assetsPath, 'app.png');
 
-app.setAboutPanelOptions({
-  applicationName: app.getName(),
-  applicationVersion: app.getVersion(),
-  copyright:
-    'Developed by Dmytro Marchuk\n' +
-    'Submit PRs on Github repo: smaug-fm/csgo-autodemo',
-  version: 'Electron 13.6.1',
-  iconPath,
-});
-
-setupMenu();
+setupMenu(iconPath);
 
 async function createWindow() {
   const steamLocation = findSteamLocation();
