@@ -1,3 +1,5 @@
+const packageJson = require('./package.json');
+
 module.exports = {
   packagerConfig: {
     icon: 'assets/app',
@@ -27,20 +29,35 @@ module.exports = {
   makers: [
     {
       name: '@electron-forge/maker-dmg',
+      platforms: ['darwin'],
       config: {
-        name: 'Autodemo',
+        name: packageJson.prettyName,
         overwrite: true,
       },
     },
     {
       name: '@electron-forge/maker-squirrel',
+      platforms: ['win32'],
       config: {
-        name: 'Autodemo',
+        name: packageJson.prettyName,
         overwrite: true,
       },
     },
     {
       name: '@electron-forge/maker-zip',
+    },
+  ],
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      platforms: ['darwin', 'win32'],
+      config: {
+        repository: {
+          owner: packageJson.owner,
+          name: packageJson.name,
+        },
+        draft: true,
+      },
     },
   ],
 };

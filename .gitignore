@@ -7,3 +7,4 @@ packages
 out
 /assets/app.icns
 /assets/app.ico
+.env

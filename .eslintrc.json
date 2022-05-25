@@ -39,5 +39,32 @@
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off"
-  }
+  },
+  "overrides": [
+    {
+      // Disabling TypeScript lint rules for JS files.
+      "files": "**/*.js",
+      "plugins": [
+        "prettier",
+        "only-warn"
+      ],
+      "extends": [
+        "standard",
+        "prettier",
+        "eslint:recommended",
+        "plugin:react-hooks/recommended"
+      ],
+      "parser": "@babel/eslint-parser",
+      "parserOptions": {
+        "requireConfigFile": false
+      },
+      "env": {
+        "node": true
+      },
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off",
+        "no-console": "off"
+      }
+    }
+  ]
 }
