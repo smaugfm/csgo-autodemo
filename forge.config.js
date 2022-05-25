@@ -32,5 +32,15 @@ module.exports = {
         overwrite: true,
       },
     },
+    {
+      name: '@electron-forge/maker-squirrel',
+      config: {
+        name: 'Autodemo',
+        overwrite: true,
+      },
+    },
+    {
+      name: '@electron-forge/maker-zip',
+    },
   ],
 };

@@ -54,6 +54,8 @@
     "@babel/preset-typescript": "^7.16.7",
     "@electron-forge/cli": "^6.0.0-beta.63",
     "@electron-forge/maker-dmg": "^6.0.0-beta.63",
+    "@electron-forge/maker-zip": "^6.0.0-beta.63",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.63",
     "@electron-forge/plugin-webpack": "^6.0.0-beta.63",
     "@emotion/babel-plugin": "^11.9.2",
     "@types/electron-devtools-installer": "^2.2.2",
