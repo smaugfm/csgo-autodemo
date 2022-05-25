@@ -69,7 +69,6 @@ async function createWindow() {
   }
 
   const errors = await ensureSteamPrerequisites(steamLocation, global.csgoPath);
-  errors.push('failedToFindCsGo');
   log.info('errors: ', errors.join(', '));
   if (errors.length === 0) {
     global.gsiServer = new Gsi(gsiPort, 'autodemo');
@@ -101,7 +100,12 @@ async function createWindow() {
 app
   .whenReady()
   .then(async () => {
-    global.mainWindow = await createWindow();
+    try {
+      global.mainWindow = await createWindow();
+    } catch (e) {
+      log.error(e);
+      process.exit(1);
+    }
     global.tray = new AutodemoTray(iconPath, global.csgoPath, global.autodemo);
 
     setupThemeChangedEvent(global.mainWindow);
