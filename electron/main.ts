@@ -85,6 +85,7 @@ async function createWindow() {
     if (process.platform === 'darwin') {
       app.dock.hide();
     }
+    global.tray = new AutodemoTray(iconPath, global.csgoPath, global.autodemo);
     return window;
   } else {
     const window = await createErrorWindow(
@@ -102,17 +103,17 @@ async function createWindow() {
 app
   .whenReady()
   .then(async () => {
+    setupConfigMain(store);
+    setupIpcMain();
+
     try {
       global.mainWindow = await createWindow();
     } catch (e) {
       log.error(e);
       process.exit(1);
     }
-    global.tray = new AutodemoTray(iconPath, global.csgoPath, global.autodemo);
 
     setupThemeChangedEvent(global.mainWindow);
-    setupConfigMain(store);
-    setupIpcMain();
   })
   .catch(e => log.error(e));
 

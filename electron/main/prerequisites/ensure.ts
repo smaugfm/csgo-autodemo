@@ -44,7 +44,7 @@ export async function ensureSteamPrerequisites(
         if (existingNetConPort) {
           if (existingNetConPort !== netConPort) {
             mainWindowArgs.push(
-              `netConPortAlreadyPresent:${existingNetConPort}` as 'netConPortAlreadyPresent',
+              `netConPortAlreadyPresent${existingNetConPort}` as 'netConPortAlreadyPresent',
             );
           }
         } else {
