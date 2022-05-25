@@ -6,3 +6,4 @@ packages
 .webpack
 out
 /assets/app.icns
+/assets/app.ico
