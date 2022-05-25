@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { shell, app, BrowserWindow } from 'electron';
 import { setupThemeChangedEvent } from './main/misc/theme';
 import log from 'electron-log';
 import { setupConfigMain } from './main/config';
@@ -101,11 +101,12 @@ async function createWindow() {
     return window;
   } else {
     const window = new BrowserWindow({
-      width: 550,
-      height: 250,
-      minWidth: 550,
-      minHeight: 250,
+      width: 900,
+      height: 400,
+      minWidth: 450,
+      minHeight: 200,
       show: true,
+      useContentSize: true,
       webPreferences: {
         devTools: isDev(),
         nodeIntegration: false,
@@ -113,6 +114,12 @@ async function createWindow() {
         additionalArguments: errors,
         preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       },
+    });
+    window.webContents.setWindowOpenHandler(details => {
+      shell.openExternal(details.url);
+      return {
+        action: 'deny',
+      };
     });
 
     await window.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);

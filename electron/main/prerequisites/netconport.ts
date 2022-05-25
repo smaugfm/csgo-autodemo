@@ -31,7 +31,13 @@ export function readCurrentCsgoLaunchOptions(
   return result;
 }
 
-export function checkNetconportAlreadyPresent(
+export function extractNetConPort(options: string): number | undefined {
+  const match = options.match(/-netconport\s+(\d+)/);
+  if (!match) return undefined;
+  return parseInt(match[1], 10);
+}
+
+export function validateNetConPort(
   options: string,
   netconport: number,
 ): boolean {
@@ -80,7 +86,7 @@ export function verifyLocalConfig(path: string, netconport: number): boolean {
       return false;
     }
     const options = get(obj, objPath);
-    return checkNetconportAlreadyPresent(options, netconport);
+    return validateNetConPort(options, netconport);
   } catch (e) {
     return false;
   }

@@ -102,8 +102,13 @@ export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEv
   }
 
   existingDemos(ascending: boolean): string[] {
+    const autodemosFolder = path.join(this.csgoPath, this.demosFolder);
+    if (!fs.existsSync(autodemosFolder)) {
+      fs.mkdirSync(autodemosFolder);
+    }
+
     return fs
-      .readdirSync(path.join(this.csgoPath, this.demosFolder), {
+      .readdirSync(autodemosFolder, {
         withFileTypes: true,
       })
       .filter(x => x.isFile())

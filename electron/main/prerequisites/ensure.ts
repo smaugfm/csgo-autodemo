@@ -1,6 +1,6 @@
 import { ensureGsiFile } from './gsi';
 import {
-  checkNetconportAlreadyPresent,
+  extractNetConPort,
   getLastLoggedInUserId,
   getLocalConfigFilePath,
   patchLocalConfig,
@@ -10,6 +10,7 @@ import {
 import { netConPort } from '../../common/types/misc';
 import { checkSteamRunning } from '../misc/os';
 import { MainWindowArg } from '../../common/types/config';
+import log from 'electron-log';
 
 export async function ensureSteamPrerequisites(
   steamLocation?: string,
@@ -38,7 +39,15 @@ export async function ensureSteamPrerequisites(
     if (localConfigFilePath) {
       const currentOptions = readCurrentCsgoLaunchOptions(localConfigFilePath);
       if (currentOptions !== null) {
-        if (!checkNetconportAlreadyPresent(currentOptions, netConPort)) {
+        const existingNetConPort = extractNetConPort(currentOptions);
+        log.info('existing option -netconport ', existingNetConPort);
+        if (existingNetConPort) {
+          if (existingNetConPort !== netConPort) {
+            mainWindowArgs.push(
+              `netConPortAlreadyPresent:${existingNetConPort}` as 'netConPortAlreadyPresent',
+            );
+          }
+        } else {
           if (await checkSteamRunning()) {
             mainWindowArgs.push('netConPortNeedToCloseSteam');
           } else {

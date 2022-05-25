@@ -2,13 +2,13 @@
 import '@fontsource/roboto';
 import { css, Global } from '@emotion/react';
 import { createRoot } from 'react-dom/client';
-import { App } from './App';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useEffect, useMemo, useState } from 'react';
 import { PaletteMode, Paper } from '@mui/material';
 import { GsiInstalled } from './components/prerequisites/GsiInstalled';
 import { PleaseCloseSteam } from './components/prerequisites/PleaseCloseSteam';
 import { FailedToSetNetConPort } from './components/prerequisites/FailedToSetNetConPort';
+import { NetConPortAlreadyPresent } from './components/prerequisites/NetConPortAlreadyPresent';
 
 function initialThemeMode(): PaletteMode {
   const isDark =
@@ -27,6 +27,9 @@ export function Root() {
   const theme = useMemo(
     () =>
       createTheme({
+        typography: {
+          fontSize: 22,
+        },
         palette: {
           mode,
           primary: {
@@ -56,16 +59,19 @@ export function Root() {
       <Global styles={globalStyles} />
       <Paper
         css={css`
-          height: 100vh;
-          width: 100vw;
+          height: calc(100vh - ${theme.spacing(8)});
+          width: calc(100vw - ${theme.spacing(8)});
+          padding: ${theme.spacing(4)};
         `}
       >
         <GsiInstalled>
-          <PleaseCloseSteam>
-            <FailedToSetNetConPort>
-              <App />
-            </FailedToSetNetConPort>
-          </PleaseCloseSteam>
+          <NetConPortAlreadyPresent>
+            <PleaseCloseSteam>
+              <FailedToSetNetConPort>
+                <></>
+              </FailedToSetNetConPort>
+            </PleaseCloseSteam>
+          </NetConPortAlreadyPresent>
         </GsiInstalled>
       </Paper>
     </ThemeProvider>

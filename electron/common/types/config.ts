@@ -16,4 +16,5 @@ export type MainWindowArg =
   | 'failedToFindCsGo'
   | 'gsiNotInstalled'
   | 'netConPortNeedToCloseSteam'
+  | 'netConPortAlreadyPresent'
   | 'netConPortFailed';

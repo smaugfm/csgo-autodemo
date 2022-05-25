@@ -29,6 +29,7 @@ export function setupMenu() {
         submenu: [
           { label: 'About Autodemo', role: 'about' },
           { type: 'separator' },
+          isDev() ? { role: 'toggleDevTools' } : {},
           { label: 'Hide Autodemo', role: 'hide' },
           { label: 'Quit Autodemo', role: 'quit' },
         ],
