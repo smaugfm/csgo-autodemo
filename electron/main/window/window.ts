@@ -1,4 +1,4 @@
-import { BrowserWindow, shell } from 'electron';
+import { shell, BrowserWindow } from 'electron';
 import { MainWindowArg } from '../../common/types/config';
 import { isDev } from '../../common/util';
 
@@ -21,7 +21,11 @@ export function createdDummyWindow() {
   });
 }
 
-export function createErrorWindow(errors: MainWindowArg[], preload: string) {
+export async function createErrorWindow(
+  errors: MainWindowArg[],
+  preload: string,
+  url: string,
+) {
   const window = new BrowserWindow({
     width: 900,
     height: 400,
@@ -37,6 +41,8 @@ export function createErrorWindow(errors: MainWindowArg[], preload: string) {
       preload,
     },
   });
+  await window.loadURL(url);
+
   window.webContents.setWindowOpenHandler(details => {
     void shell.openExternal(details.url);
     return {

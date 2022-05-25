@@ -87,9 +87,11 @@ async function createWindow() {
     }
     return window;
   } else {
-    const window = createErrorWindow(errors, MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY);
-    await window.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
-
+    const window = await createErrorWindow(
+      errors,
+      MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+      MAIN_WINDOW_WEBPACK_ENTRY,
+    );
     window.on('closed', () => {
       global.mainWindow = undefined;
     });
