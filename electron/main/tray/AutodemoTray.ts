@@ -106,7 +106,8 @@ export class AutodemoTray {
       label: 'Open Demos Location',
       click: () =>
         shell.showItemInFolder(
-          this.recentDemos?.[0]?.fullPath ?? path.join(csgoPath, 'bin'),
+          this.recentDemos?.[0]?.fullPath ??
+            path.join(csgoPath, this.autodemo?.demosFolder ?? 'bin'),
         ),
     });
 
