@@ -4,6 +4,7 @@ import log from 'electron-log';
 import { readLibraryFoldersVdf } from './vdf';
 import { SteamLibraryFolder } from './types';
 import { keys } from 'lodash';
+import { windowsTryGetRegistryValue } from '../misc/os';
 
 const csgoAppId = 730;
 
@@ -16,13 +17,18 @@ export function findSteamLocation() {
         'Library/Application Support/Steam/',
       );
       break;
-    case 'linux':
-      candidate = path.join(process.env.HOME!, '.local/share/Steam/');
-      throw new Error('Linux is not supported!');
-    case 'win32':
-      // "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam"
-      // "HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam"
-      throw new Error('Win32 is not supported!');
+    case 'win32': {
+      const steamPath = windowsTryGetRegistryValue(
+        'HKEY_CURRENT_USER\\SOFTWARE\\Valve\\Steam',
+        'SteamPath',
+      );
+      if (!steamPath) {
+        log.error('Failed to read steamPath from registry!');
+        return undefined;
+      }
+      candidate = steamPath;
+      break;
+    }
     default:
       throw new Error(`Platform ${process.platform} is not supported`);
   }

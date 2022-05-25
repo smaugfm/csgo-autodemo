@@ -11,10 +11,10 @@ import { netConPort } from '../../common/types/misc';
 import { checkSteamRunning } from '../misc/os';
 import { MainWindowArg } from '../../common/types/config';
 
-export function ensureSteamPrerequisites(
+export async function ensureSteamPrerequisites(
   steamLocation?: string,
   csgoFolder?: string,
-): MainWindowArg[] {
+): Promise<MainWindowArg[]> {
   const mainWindowArgs: MainWindowArg[] = [];
 
   if (!steamLocation) {
@@ -39,7 +39,7 @@ export function ensureSteamPrerequisites(
       const currentOptions = readCurrentCsgoLaunchOptions(localConfigFilePath);
       if (currentOptions !== null) {
         if (!checkNetconportAlreadyPresent(currentOptions, netConPort)) {
-          if (checkSteamRunning()) {
+          if (await checkSteamRunning()) {
             mainWindowArgs.push('netConPortNeedToCloseSteam');
           } else {
             if (patchLocalConfig(localConfigFilePath, netConPort)) {

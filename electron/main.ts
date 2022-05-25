@@ -67,7 +67,7 @@ async function createWindow() {
     global.csgoPath = locateCsgoFolder(steamLocation);
   }
 
-  const errors = ensureSteamPrerequisites(steamLocation, global.csgoPath);
+  const errors = await ensureSteamPrerequisites(steamLocation, global.csgoPath);
   if (errors.length === 0) {
     global.gsiServer = new Gsi(gsiPort, 'autodemo');
     global.netconnection = new NetCon(netConPort);
