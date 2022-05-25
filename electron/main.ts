@@ -25,6 +25,8 @@ import {
 import { AutodemoTray } from './main/tray/AutodemoTray';
 import { createdDummyWindow, createErrorWindow } from './main/window/window';
 
+if (require('electron-squirrel-startup')) app.quit();
+
 const global: Partial<{
   mainWindow: BrowserWindow;
   tray: AutodemoTray;

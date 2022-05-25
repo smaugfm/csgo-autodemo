@@ -1,5 +1,7 @@
 {
   "name": "csgo-autodemo",
+  "author": "Dmytro marchuk",
+  "description": "An app that allows you to automatically record POV demos of all your CS:GO games",
   "main": "./.webpack/main",
   "version": "0.0.1",
   "scripts": {
@@ -7,7 +9,7 @@
     "tsc": "tsc",
     "make": "yarn icon-gen && electron-forge make",
     "test": "webpack --config webpack/test.webpack.js && node .webpack/test/test.js",
-    "icon-gen": "icon-gen -i assets/app.svg -o ./assets --icns --icns-name app",
+    "icon-gen": "icon-gen -i assets/app.svg -o ./assets --icns --icns-name app --ico --ico-name app",
     "lint": "eslint . --fix --ext '.js,.jsx,.ts,.tsx' && tsc",
     "prepare": "husky install",
     "pre-commit": "lint-staged && tsc"
@@ -65,6 +67,7 @@
     "@typescript-eslint/eslint-plugin": "^5.23.0",
     "@typescript-eslint/parser": "^5.23.0",
     "@vercel/webpack-asset-relocator-loader": "^1.7.2",
+    "electron-squirrel-startup": "^1.0.0",
     "babel-loader": "^8.2.5",
     "copy-webpack-plugin": "^9.1.0",
     "cross-env": "^7.0.3",
