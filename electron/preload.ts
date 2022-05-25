@@ -4,10 +4,7 @@ import { config } from './renderer/config';
 import { setupIpcRenderer } from './renderer/ipc';
 import log from 'electron-log';
 
-console.log("preload: start");
-
-function compureApi() {
-  console.log("preload: argv", process.argv.join(", "))
+function apiObject() {
   try {
     return {
       theming,
@@ -21,16 +18,15 @@ function compureApi() {
       ),
       netConPortAlreadyPresent: process.argv
         .find(x => x.startsWith('netConPortAlreadyPresent'))
-        ?.substring("netConPortAlreadyPresent".length) as string | undefined,
+        ?.substring('netConPortAlreadyPresent'.length) as string | undefined,
       netConPortFailed: process.argv.includes('netConPortFailed'),
     };
   } catch (e) {
-    console.log(e);
+    log.error('Preload script error');
+    log.error(e);
     process.exit(1);
   }
 }
 
-export const api = compureApi();
-console.log("preload: after compute api", api);
+export const api = apiObject();
 contextBridge.exposeInMainWorld('Main', api);
-console.log("preload: after expose");
