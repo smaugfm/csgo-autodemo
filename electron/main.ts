@@ -1,7 +1,7 @@
-import { shell, app, BrowserWindow } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import { setupThemeChangedEvent } from './main/misc/theme';
 import log from 'electron-log';
-import { setupConfigMain } from './main/config';
+import { setupConfigMain } from './main/config/config';
 import { setupIpcMain } from './main/ipc';
 import { ensureSteamPrerequisites } from './main/prerequisites/ensure';
 import { Gsi } from './main/gsi/Gsi';
@@ -23,6 +23,7 @@ import {
   locateCsgoFolder,
 } from './main/prerequisites/steam-folders';
 import { AutodemoTray } from './main/tray/AutodemoTray';
+import { createdDummyWindow, createErrorWindow } from './main/window/window';
 
 const global: Partial<{
   mainWindow: BrowserWindow;
@@ -68,6 +69,8 @@ async function createWindow() {
   }
 
   const errors = await ensureSteamPrerequisites(steamLocation, global.csgoPath);
+  errors.push('failedToFindCsGo');
+  log.info('errors: ', errors.join(', '));
   if (errors.length === 0) {
     global.gsiServer = new Gsi(gsiPort, 'autodemo');
     global.netconnection = new NetCon(netConPort);
@@ -78,50 +81,14 @@ async function createWindow() {
         global.gsiServer,
         global.csgoPath,
       );
-    const window = new BrowserWindow({
-      width: 300,
-      height: 450,
-      show: false,
-      frame: false,
-      fullscreenable: false,
-      resizable: false,
-      transparent: true,
-      skipTaskbar: true,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        // Prevents renderer process code from not running when window is hidden
-        backgroundThrottling: true,
-      },
-    });
+    const window = createdDummyWindow();
     window.hide();
     if (process.platform === 'darwin') {
       app.dock.hide();
     }
     return window;
   } else {
-    const window = new BrowserWindow({
-      width: 900,
-      height: 400,
-      minWidth: 450,
-      minHeight: 200,
-      show: true,
-      useContentSize: true,
-      webPreferences: {
-        devTools: isDev(),
-        nodeIntegration: false,
-        contextIsolation: true,
-        additionalArguments: errors,
-        preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-      },
-    });
-    window.webContents.setWindowOpenHandler(details => {
-      shell.openExternal(details.url);
-      return {
-        action: 'deny',
-      };
-    });
-
+    const window = createErrorWindow(errors, MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY);
     await window.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
     window.on('closed', () => {

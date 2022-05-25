@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { Config } from '../common/types/config';
+import { Config } from '../../common/types/config';
 
 export function setupConfigMain(store: Config) {
   ipcMain.handle('store-read', (event, key) => store.read(key));

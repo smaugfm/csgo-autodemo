@@ -4,7 +4,7 @@ import { Download } from '@mui/icons-material';
 import { PrerequisitesModal } from './PrerequisitesModal';
 import { Body1 } from '../common/typography';
 
-export function GsiInstalled(props: PropsWithChildren<unknown>) {
+export function FailedToInstallGsi(props: PropsWithChildren<unknown>) {
   return (
     <PrerequisitesModal
       state={window.Main.gsiNotInstalled}

@@ -13,7 +13,7 @@ export function PleaseCloseSteam(props: PropsWithChildren<unknown>) {
           <code>&#8209;netconport&nbsp;{netConPort}</code> to your CS:GO launch
           options.
           <br />
-          Please restart Autodemo with Steam closed to add this option
+          Please restart Autodemo with Steam for this option to be added
           automatically.
         </Body1>
       }

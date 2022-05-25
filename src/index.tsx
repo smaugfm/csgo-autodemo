@@ -5,10 +5,12 @@ import { createRoot } from 'react-dom/client';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useEffect, useMemo, useState } from 'react';
 import { PaletteMode, Paper } from '@mui/material';
-import { GsiInstalled } from './components/prerequisites/GsiInstalled';
+import { FailedToInstallGsi } from './components/prerequisites/FailedToInstallGsi';
 import { PleaseCloseSteam } from './components/prerequisites/PleaseCloseSteam';
 import { FailedToSetNetConPort } from './components/prerequisites/FailedToSetNetConPort';
 import { NetConPortAlreadyPresent } from './components/prerequisites/NetConPortAlreadyPresent';
+import { FailedToFindSteam } from './components/prerequisites/FailedToFindSteam';
+import { FailedToFindCsGo } from './components/prerequisites/FailedToFinm';
 
 function initialThemeMode(): PaletteMode {
   const isDark =
@@ -64,15 +66,19 @@ export function Root() {
           padding: ${theme.spacing(4)};
         `}
       >
-        <GsiInstalled>
-          <NetConPortAlreadyPresent>
-            <PleaseCloseSteam>
-              <FailedToSetNetConPort>
-                <></>
-              </FailedToSetNetConPort>
-            </PleaseCloseSteam>
-          </NetConPortAlreadyPresent>
-        </GsiInstalled>
+        <FailedToFindSteam>
+          <FailedToFindCsGo>
+            <FailedToInstallGsi>
+              <NetConPortAlreadyPresent>
+                <PleaseCloseSteam>
+                  <FailedToSetNetConPort>
+                    <></>
+                  </FailedToSetNetConPort>
+                </PleaseCloseSteam>
+              </NetConPortAlreadyPresent>
+            </FailedToInstallGsi>
+          </FailedToFindCsGo>
+        </FailedToFindSteam>
       </Paper>
     </ThemeProvider>
   );

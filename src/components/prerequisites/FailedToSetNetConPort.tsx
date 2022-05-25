@@ -9,10 +9,11 @@ export function FailedToSetNetConPort(props: PropsWithChildren<unknown>) {
       state={window.Main.netConPortFailed}
       text={
         <Body1>
-          Failed to automatically add <code>-netconport {netConPort}</code> to
-          your CS:GO launch options.
+          In order to record demos Autodemo needs to add{' '}
+          <code>&#8209;netconport&nbsp;{netConPort}</code> to your CS:GO launch
+          options but it failed to do so.
           <br />
-          Please do this manually and restart Autodemo.
+          Please add this option manually and restart Autodemo.
         </Body1>
       }
     >
