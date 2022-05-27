@@ -43,7 +43,7 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
       const alreadyRecording = 'Already recording.';
       const waitForRoundOver =
         'Please start demo recording after current round is over.';
-      const successRegex = /Recording to (.*?)\.dem\.\.\./g;
+      const successRegex = /^Recording to (.*?)\.dem\.\.\.$/m;
 
       const match = message.match(successRegex);
       if (match) {
@@ -51,7 +51,7 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
         if (recordingDemoName !== demoName) {
           log.error(`[netcon] ${message}`);
           result = RecordingStartError.WrongDemoName;
-          return false;
+          return true;
         }
         return true;
       } else {
@@ -186,13 +186,13 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
       await this.connection.send(command, {
         waitFor,
       });
-      return true;
+      return false;
     } catch (e) {
       if (e instanceof TimeoutError) {
-        return false;
+        return true;
       } else {
         log.error('[netcon]: error sending command', command, e);
-        return true;
+        return false;
       }
     }
   }
