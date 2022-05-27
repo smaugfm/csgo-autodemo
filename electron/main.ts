@@ -64,7 +64,6 @@ async function createWindow() {
   }
 
   const errors = await ensureSteamPrerequisites(steamLocation, global.csgoPath);
-  errors.push('netConPortAlreadyPresent');
   log.info('errors: ', errors.join(', '));
   if (errors.length === 0) {
     global.gsiServer = new Gsi(gsiPort, 'autodemo');

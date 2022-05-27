@@ -2,9 +2,10 @@ import EventEmitter from 'events';
 import waitOn from 'wait-on';
 import log from 'electron-log';
 import TypedEmitter from 'typed-emitter';
-import { NetConEvents } from './types';
+import { NetConEvents, RecordingStartError, RecordingStopError } from './types';
 import { delay } from '../../common/util';
 import { SendOptions, Telnet } from '../../telnet-client/telnet-client';
+import { TimeoutError } from '../../common/types/errors';
 
 export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents>) {
   private connection: Telnet | null = null;
@@ -33,51 +34,68 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
     await this.sendCommand(`echo ${message}`, message);
   }
 
-  public async recordDemo(demoName: string) {
+  public async recordDemo(
+    demoName: string,
+  ): Promise<RecordingStartError | undefined> {
     log.info(`[netcon] record ${demoName}`);
-    return this.sendCommand(`record ${demoName}`, message => {
+    let result: RecordingStartError | undefined;
+    const timeout = await this.sendCommand(`record ${demoName}`, message => {
       const alreadyRecording = 'Already recording.';
       const waitForRoundOver =
         'Please start demo recording after current round is over.';
-      const successRegex = /^Recording to (.*?)\.dem\.\.\.$/;
+      const successRegex = /Recording to (.*?)\.dem\.\.\./g;
 
       const match = message.match(successRegex);
-
-      if (message === alreadyRecording) {
-        log.warn(`[netcon] record: ${message}`);
+      if (match) {
+        const recordingDemoName = match[1];
+        if (recordingDemoName !== demoName) {
+          log.error(`[netcon] ${message}`);
+          result = RecordingStartError.WrongDemoName;
+          return false;
+        }
         return true;
-      }
-      if (message === waitForRoundOver || !match) {
-        log.error(`[netcon] record ${demoName}: ${message}`);
+      } else {
+        if (message.includes(alreadyRecording)) {
+          log.warn(`[netcon] ${message}`);
+          result = RecordingStartError.AlreadyRecording;
+          return true;
+        }
+        if (message.includes(waitForRoundOver)) {
+          log.error(`[netcon] ${demoName}: ${message}`);
+          result = RecordingStartError.WaitForRoundOver;
+          return true;
+        }
         return false;
       }
-
-      const recordingDemoName = match[1];
-      if (recordingDemoName !== demoName) {
-        log.error(`[netcon] record ${demoName}. Wrong demo name: ${message}`);
-        return false;
-      }
-      return true;
     });
+
+    if (timeout) return RecordingStartError.Timeout;
+
+    return result;
   }
 
-  public async stopRecordingDemo() {
-    log.info('[netcon] stop');
-    return this.sendCommand('stop', message => {
+  public async stopRecordingDemo(): Promise<RecordingStopError | undefined> {
+    log.info('[netcon] stop recording');
+    let result: RecordingStopError | undefined;
+    const timeout = await this.sendCommand('stop', message => {
       const successRegex =
         /^Completed demo, recording time (.*?), game frames (.*?)\.$/;
       const stopAtRoundEnd =
         'Demo recording will stop as soon as the round is over.';
-      const recordInDemo = "Can't record during demo playback.";
 
       const match = message.match(successRegex);
-      if (message === stopAtRoundEnd || message === recordInDemo || !match) {
-        log.error(`[netcon]: stop: ${message}`);
-        return false;
+      if (message.includes(stopAtRoundEnd)) {
+        log.warn(`[netcon]: ${message}`);
+        result = RecordingStopError.WillStopAtRoundOver;
+        return true;
       }
 
-      return true;
+      return Boolean(match);
     });
+
+    if (timeout) return RecordingStopError.Timeout;
+
+    return result;
   }
 
   private setupDataHandler(connection: Telnet) {
@@ -168,8 +186,14 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
       await this.connection.send(command, {
         waitFor,
       });
+      return true;
     } catch (e) {
-      log.error('[netcon]: error sending command', command, e);
+      if (e instanceof TimeoutError) {
+        return false;
+      } else {
+        log.error('[netcon]: error sending command', command, e);
+        return true;
+      }
     }
   }
 }

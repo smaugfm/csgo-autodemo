@@ -8,11 +8,14 @@ import EventEmitter from 'events';
 import { AutodemoEvents, modeMapToHuman } from './types';
 import { strcmp } from '../../common/util';
 import sanitize from 'sanitize-filename';
+import { RecordingStartError } from '../netcon/types';
 
 export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEvents>) {
   private mapName: string;
   private gameMode: string;
   private gameLive: boolean;
+  private recording = false;
+  private readonly netCon: NetCon;
   private readonly csgoPath: string;
 
   constructor(netCon: NetCon, gsi: TypedEmitter<GsiEvents>, csgoPath: string) {
@@ -20,12 +23,14 @@ export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEv
     this.mapName = '';
     this.gameMode = '';
     this.gameLive = false;
+    this.netCon = netCon;
     this.csgoPath = csgoPath;
 
-    netCon.on('disconnected', () => {
+    this.netCon.on('disconnected', () => {
       this.gameLive = false;
       this.mapName = '';
       this.gameMode = '';
+      this.recording = false;
     });
     gsi.on('gameMap', name => {
       log.debug(`gameMap: ${name}`);
@@ -35,42 +40,80 @@ export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEv
     gsi.on('gameMode', mode => {
       this.gameMode = modeMapToHuman[mode] ?? mode;
     });
-    gsi.on('gamePhase', async phase => {
-      const wasGameLive = this.gameLive;
-      log.debug(`gamePhase: ${phase}`);
-
-      switch (phase) {
-        case 'live':
-          this.gameLive = true;
-          break;
-        case 'warmup':
-          this.gameLive = true;
-          break;
-        case 'intermission':
-          this.gameLive = true;
-          break;
-        case 'gameover':
-          this.gameLive = false;
-          break;
-      }
-
-      const demoName = await this.buildDemoName();
-
-      if (!wasGameLive && this.gameLive) {
-        try {
-          await netCon.recordDemo(demoName);
-        } catch (e) {
-          log.error(`Error starting recording ${demoName}`, e);
-        }
-      } else if (wasGameLive && !this.gameLive) {
-        this.mapName = '';
-        try {
-          await netCon.stopRecordingDemo();
-        } catch (e) {
-          log.error('Error stopping recording.');
-        }
+    gsi.on('roundPhase', async phase => {
+      if (phase === 'freezetime' && !this.recording) {
+        await this.recordOrStop(this.gameLive);
       }
     });
+    gsi.on('gamePhase', async phase => {
+      const wasGameLive = this.updateGameLive(phase);
+
+      await this.recordOrStop(wasGameLive);
+    });
+  }
+
+  private async recordOrStop(wasGameLive: boolean) {
+    if (!this.recording) {
+      const demoName = await this.buildDemoName();
+      try {
+        const error = await this.netCon.recordDemo(demoName);
+        if (error) {
+          switch (error) {
+            case RecordingStartError.Timeout:
+              log.error(
+                'Failed to start recording due to an unexpected error (timed-out)',
+              );
+              break;
+            case RecordingStartError.WaitForRoundOver:
+              log.error(
+                'Failed to start recording this round. Will try at next one.',
+              );
+              break;
+            case RecordingStartError.WrongDemoName:
+              log.error('Recording started but with wrong demo name.');
+              break;
+            case RecordingStartError.AlreadyRecording:
+              this.recording = true;
+              break;
+          }
+        } else {
+          this.recording = true;
+        }
+      } catch (e) {
+        log.error('Error starting recording: ', e);
+      }
+    } else if (wasGameLive && !this.gameLive) {
+      this.mapName = '';
+      try {
+        await this.netCon.stopRecordingDemo();
+        this.recording = false;
+      } catch (e) {
+        log.error('Error stopping recording: ', e);
+      }
+    }
+  }
+
+  private updateGameLive(
+    phase: 'live' | 'intermission' | 'gameover' | 'warmup',
+  ) {
+    const wasGameLive = this.gameLive;
+    log.debug(`gamePhase: ${phase}`);
+
+    switch (phase) {
+      case 'live':
+        this.gameLive = true;
+        break;
+      case 'warmup':
+        this.gameLive = true;
+        break;
+      case 'intermission':
+        this.gameLive = true;
+        break;
+      case 'gameover':
+        this.gameLive = false;
+        break;
+    }
+    return wasGameLive;
   }
 
   public get demoFileNameRegex() {

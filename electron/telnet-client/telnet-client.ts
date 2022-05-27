@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { createConnection, Socket, SocketConnectOpts } from 'net';
 import { asCallback, Callback, search } from './utils';
+import { TimeoutError } from '../common/types/errors';
 
 export type TelnetState =
   | null
@@ -422,13 +423,17 @@ export class Telnet extends EventEmitter {
               sendTimer = setTimeout(() => {
                 sendTimer = undefined;
 
+                this.socket.removeListener('data', sendHandler);
                 if (response === '') {
-                  this.socket.removeListener('data', sendHandler);
                   reject(new Error('response not received'));
                   return;
                 }
 
-                this.socket.removeListener('data', sendHandler);
+                if (this.opts.waitFor) {
+                  reject(new TimeoutError('Did not receive desired response'));
+                  return;
+                }
+
                 resolve(response);
               }, this.opts.sendTimeout);
             });
