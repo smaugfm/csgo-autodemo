@@ -41,7 +41,7 @@ export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEv
       this.gameMode = modeMapToHuman[mode] ?? mode;
     });
     gsi.on('roundPhase', async phase => {
-      if (phase === 'freezetime' && !this.recording) {
+      if (!this.recording && ['freezetime', 'live'].includes(phase)) {
         await this.recordOrStop(this.gameLive);
       }
     });
