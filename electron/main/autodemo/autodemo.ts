@@ -7,6 +7,7 @@ import { GsiEvents } from '../gsi/types';
 import EventEmitter from 'events';
 import { AutodemoEvents, modeMapToHuman } from './types';
 import { strcmp } from '../../common/util';
+import sanitize from 'sanitize-filename';
 
 export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEvents>) {
   private mapName: string;
@@ -90,6 +91,7 @@ export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEv
       this.demosFolder,
       `${dateString}_${this.gameMode}_${this.mapName}`,
     );
+    demoName = sanitize(demoName);
 
     let fullDemoPath = this.fullDemoPath(demoName);
     let i = 0;

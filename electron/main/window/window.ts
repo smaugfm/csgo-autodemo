@@ -27,10 +27,9 @@ export async function createErrorWindow(
   url: string,
 ) {
   const window = new BrowserWindow({
-    width: 900,
+    width: 800,
     height: 400,
-    minWidth: 450,
-    minHeight: 200,
+    resizable: false,
     show: true,
     useContentSize: true,
     webPreferences: {

@@ -47,6 +47,7 @@
     "react-dom": "^18.1.0",
     "react-hot-loader": "^4.13.0",
     "react-use": "^17.3.2",
+    "sanitize-filename": "^1.6.3",
     "steamid": "^2.0.0",
     "tape": "^5.5.3",
     "ts-mockito": "^2.6.1",
