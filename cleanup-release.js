@@ -49,32 +49,14 @@
     );
   }
 
-  const dmg = assets.find(x => x.name === `${packageJson.prettyName}.dmg`);
+  const dmg = assets.find(x => x.name === `${packageJson.productName}.dmg`);
   if (dmg) {
-    const newName = `${packageJson.prettyName}-${process.arch}-${packageJson.version}.dmg`;
+    const newName = `${packageJson.productName}-${process.arch}-${packageJson.version}.dmg`;
     console.log(`Renaming ${dmg.name} to ${newName}`);
     await octokit.rest.repos.updateReleaseAsset({
       ...options,
       asset_id: dmg.id,
       name: newName,
     });
-  }
-
-  const repoNameFiles = assets.filter(x => x.name.startsWith(options.repo));
-  if (repoNameFiles.length > 0) {
-    console.log(
-      `Renaming ${options.repo}* files to ${packageJson.prettyName}* files...`,
-    );
-    await Promise.all(
-      repoNameFiles.map(file => {
-        const newName =
-          packageJson.prettyName + file.name.substring(packageJson.name.length);
-        return octokit.rest.repos.updateReleaseAsset({
-          ...options,
-          asset_id: file.id,
-          name: newName,
-        });
-      }),
-    );
   }
 })();

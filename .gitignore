@@ -5,6 +5,7 @@ dist
 packages
 .webpack
 out
-/assets/app.icns
-/assets/app.ico
+/assets/*.icns
+/assets/*.ico
+/assets/*.png
 .env

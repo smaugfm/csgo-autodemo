@@ -9,6 +9,7 @@ import log from 'electron-log';
 import { Autodemo } from '../autodemo/autodemo';
 import fs from 'fs';
 import path from 'path';
+import { assetsPath, packageJson } from '../misc/app';
 
 type RecentDemo = {
   name: string;
@@ -22,10 +23,20 @@ export class AutodemoTray {
   private readonly recentDemos: RecentDemo[];
   private readonly menu: Electron.Menu;
 
-  constructor(iconPath: string, csgoPath?: string, autodemo?: Autodemo) {
+  constructor(csgoPath?: string, autodemo?: Autodemo) {
+    const icon =
+      process.platform === 'darwin'
+        ? nativeImage.createFromPath(path.join(assetsPath, 'app.png')).resize({
+            width: 16,
+            height: 16,
+          })
+        : process.platform === 'win32'
+        ? nativeImage.createFromPath(path.join(assetsPath, 'app.ico'))
+        : nativeImage.createEmpty();
+
     this.csgoPath = csgoPath;
     this.autodemo = autodemo;
-    this.tray = new Tray(nativeImage.createFromPath(iconPath));
+    this.tray = new Tray(icon);
     this.recentDemos = this.lookForInitialDemos();
     this.menu = this.createMenu();
 
@@ -33,7 +44,7 @@ export class AutodemoTray {
       await this.addNewDemoToRecent(demoName);
     });
 
-    this.tray.setToolTip('Autodemo');
+    this.tray.setToolTip(packageJson.productName);
     this.tray.setContextMenu(this.menu);
   }
 

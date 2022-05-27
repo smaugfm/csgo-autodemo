@@ -11,8 +11,6 @@ import { GsiEvents } from './main/gsi/types';
 import { NetCon } from './main/netcon/NetCon';
 import { Autodemo } from './main/autodemo/autodemo';
 import { createStore } from './common/config';
-import path from 'path';
-import { isDev } from './common/util';
 import {
   setupAboutPanel,
   setupLaunchAtLogin,
@@ -55,13 +53,8 @@ declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 log.transports.console.level = 'info';
 log.transports.file.level = 'info';
 
-const assetsPath = isDev()
-  ? path.join(app.getAppPath(), 'assets')
-  : process.resourcesPath;
-const iconPath = path.join(assetsPath, 'app.png');
-
 setupMenu();
-setupAboutPanel(iconPath);
+setupAboutPanel();
 setupLaunchAtLogin();
 
 async function createWindow() {
@@ -87,7 +80,7 @@ async function createWindow() {
     if (process.platform === 'darwin') {
       app.dock.hide();
     }
-    global.tray = new AutodemoTray(iconPath, global.csgoPath, global.autodemo);
+    global.tray = new AutodemoTray(global.csgoPath, global.autodemo);
     return window;
   } else {
     const window = await createErrorWindow(

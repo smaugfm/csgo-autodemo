@@ -11,10 +11,14 @@ export async function checkSteamRunning(): Promise<boolean> {
 
   switch (process.platform) {
     case 'darwin': {
-      const result = execSync('pgrep steam_osx', {
-        encoding: 'utf-8',
-      });
-      steamRunning = result.length > 0;
+      try {
+        const result = execSync('pgrep steam_osx', {
+          encoding: 'utf-8',
+        });
+        steamRunning = result.length > 0;
+      } catch (e) {
+        steamRunning = false;
+      }
       break;
     }
     case 'win32': {

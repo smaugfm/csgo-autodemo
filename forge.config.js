@@ -1,9 +1,15 @@
+const path = require('path');
 const packageJson = require('./package.json');
 
 module.exports = {
   packagerConfig: {
     icon: 'assets/app',
-    extraResource: ['assets/app.png', 'assets/app@2x.png', 'assets/app.svg'],
+    extraResource: [
+      'assets/app.png',
+      'assets/app.svg',
+      'assets/app.ico',
+      'package.json',
+    ],
   },
   plugins: [
     [
@@ -31,7 +37,7 @@ module.exports = {
       name: '@electron-forge/maker-dmg',
       platforms: ['darwin'],
       config: {
-        name: packageJson.prettyName,
+        name: packageJson.productName,
         overwrite: true,
       },
     },
@@ -39,7 +45,11 @@ module.exports = {
       name: '@electron-forge/maker-squirrel',
       platforms: ['win32'],
       config: {
-        name: packageJson.prettyName,
+        name: packageJson.productName,
+        title: packageJson.productName,
+        exe: packageJson.productName,
+        iconUrl: path.join(__dirname, 'assets', 'app.ico'),
+        setupIcon: path.join(__dirname, 'assets', 'app.ico'),
         overwrite: true,
       },
     },
