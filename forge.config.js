@@ -45,9 +45,6 @@ module.exports = {
       name: '@electron-forge/maker-squirrel',
       platforms: ['win32'],
       config: {
-        name: packageJson.productName,
-        title: packageJson.productName,
-        exe: packageJson.productName,
         iconUrl: path.join(__dirname, 'assets', 'app.ico'),
         setupIcon: path.join(__dirname, 'assets', 'app.ico'),
         overwrite: true,
