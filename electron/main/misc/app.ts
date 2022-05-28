@@ -1,26 +1,23 @@
 import { app, Menu, MenuItemConstructorOptions } from 'electron';
-import { isDev } from './os';
 import path from 'path';
 import fs from 'fs';
+import isDev from 'electron-is-dev';
 
-export const assetsPath = isDev()
+export const assetsPath = isDev
   ? path.join(app.getAppPath(), 'assets')
   : process.resourcesPath;
 
 export const packageJson = JSON.parse(
   fs.readFileSync(
-    path.join(
-      isDev() ? app.getAppPath() : process.resourcesPath,
-      'package.json',
-    ),
+    path.join(isDev ? app.getAppPath() : process.resourcesPath, 'package.json'),
     'utf-8',
   ),
 );
 
 export function setupLaunchAtLogin() {
-  if (!isDev()) {
+  if (!isDev) {
     const options = app.getLoginItemSettings();
-    if (!options.openAtLogin && !isDev()) {
+    if (!options.openAtLogin && !isDev) {
       app.setLoginItemSettings({ openAtLogin: true });
     }
   }
@@ -55,7 +52,7 @@ export function setupMenu() {
         ],
       },
     ];
-    if (isDev())
+    if (isDev)
       (template[0].submenu as MenuItemConstructorOptions[]).push(devMenu);
     Menu.setApplicationMenu(Menu.buildFromTemplate(template));
   } else {

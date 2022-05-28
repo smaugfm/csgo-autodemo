@@ -2,10 +2,6 @@ import { execSync } from 'child_process';
 import log from 'electron-log';
 import * as os from 'os';
 
-export function isDev() {
-  return process.env.NODE_ENV !== 'production';
-}
-
 export async function checkSteamRunning(): Promise<boolean> {
   let steamRunning: boolean;
 

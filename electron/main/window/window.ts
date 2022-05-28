@@ -1,6 +1,6 @@
-import { shell, BrowserWindow } from 'electron';
+import { BrowserWindow, shell } from 'electron';
 import { MainWindowArg } from '../../common/types/config';
-import { isDev } from '../../common/util';
+import isDev from 'electron-is-dev';
 
 export function createdDummyWindow() {
   return new BrowserWindow({
@@ -33,7 +33,7 @@ export async function createErrorWindow(
     show: true,
     useContentSize: true,
     webPreferences: {
-      devTools: isDev(),
+      devTools: isDev,
       nodeIntegration: false,
       contextIsolation: true,
       additionalArguments: errors,

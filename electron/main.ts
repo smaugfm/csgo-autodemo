@@ -12,6 +12,7 @@ import { NetCon } from './main/netcon/NetCon';
 import { Autodemo } from './main/autodemo/autodemo';
 import { createStore } from './common/config';
 import {
+  packageJson,
   setupAboutPanel,
   setupLaunchAtLogin,
   setupMenu,
@@ -22,6 +23,8 @@ import {
 } from './main/prerequisites/steam-folders';
 import { AutodemoTray } from './main/tray/AutodemoTray';
 import { createdDummyWindow, createErrorWindow } from './main/window/window';
+
+app.setAppUserModelId(`github.${packageJson.productName}.0c75d883`);
 
 if (require('electron-squirrel-startup')) app.quit();
 
