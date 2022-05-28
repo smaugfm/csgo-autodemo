@@ -2,7 +2,7 @@ import EventEmitter from 'events';
 import waitOn from 'wait-on';
 import log from 'electron-log';
 import TypedEmitter from 'typed-emitter';
-import { NetConEvents, RecordingStartError, RecordingStopError } from './types';
+import { NetConEvents, RecordingStartError } from './types';
 import { delay } from '../../common/util';
 import { SendOptions, Telnet } from '../../telnet-client/telnet-client';
 import { TimeoutError } from '../../common/types/errors';
@@ -61,7 +61,7 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
           return true;
         }
         if (message.includes(waitForRoundOver)) {
-          log.error(`[netcon] ${demoName}: ${message}`);
+          log.error(`[netcon] ${message}`);
           result = RecordingStartError.WaitForRoundOver;
           return true;
         }
@@ -69,31 +69,10 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
       }
     });
 
-    if (timeout) return RecordingStartError.Timeout;
-
-    return result;
-  }
-
-  public async stopRecordingDemo(): Promise<RecordingStopError | undefined> {
-    log.info('[netcon] stop recording');
-    let result: RecordingStopError | undefined;
-    const timeout = await this.sendCommand('stop', message => {
-      const successRegex =
-        /^Completed demo, recording time (.*?), game frames (.*?)\.$/;
-      const stopAtRoundEnd =
-        'Demo recording will stop as soon as the round is over.';
-
-      const match = message.match(successRegex);
-      if (message.includes(stopAtRoundEnd)) {
-        log.warn(`[netcon]: ${message}`);
-        result = RecordingStopError.WillStopAtRoundOver;
-        return true;
-      }
-
-      return Boolean(match);
-    });
-
-    if (timeout) return RecordingStopError.Timeout;
+    if (timeout) {
+      log.error(`[netcon] record command timed-out`);
+      return RecordingStartError.Timeout;
+    }
 
     return result;
   }

@@ -5,11 +5,6 @@ export enum RecordingStartError {
   AlreadyRecording = 'AlreadyRecording',
 }
 
-export enum RecordingStopError {
-  Timeout = 'Timeout',
-  WillStopAtRoundOver = 'WillStopAtRoundOver',
-}
-
 export type NetConEvents = {
   console: (message: string) => void;
   connected: () => void;

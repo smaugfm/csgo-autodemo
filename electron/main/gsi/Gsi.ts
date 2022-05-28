@@ -3,13 +3,13 @@ import log from 'electron-log';
 import EventEmitter from 'events';
 import TypedEmitter from 'typed-emitter';
 import { AddressInfo } from 'net';
-import { GsiEvents, ModeMap } from './types';
+import { GsiEvents } from './types';
 import { GameState } from 'csgo-gsi-types';
 
 export class Gsi extends (EventEmitter as new () => TypedEmitter<GsiEvents>) {
   private readonly authToken;
-  private readonly bombTime = 40;
   private readonly app: Server;
+  private prevState: Partial<GameState> | undefined;
 
   constructor(port: number, authToken: string) {
     super();
@@ -33,8 +33,6 @@ export class Gsi extends (EventEmitter as new () => TypedEmitter<GsiEvents>) {
       const address = this.app.address() as AddressInfo;
       log.info(`GSI: server listening on ${address.address}:${address.port}`);
     });
-
-    this.bombTime = 40;
   }
 
   processJson(body: string) {
@@ -56,47 +54,21 @@ export class Gsi extends (EventEmitter as new () => TypedEmitter<GsiEvents>) {
     return data.auth.token === this.authToken;
   }
 
-  process(data: Partial<GameState>) {
-    if (data.map) {
-      this.emit('gameMap', data.map.name);
-      this.emit('gameMode', data.map.mode as ModeMap);
-      this.emit('gamePhase', data.map.phase); // warmup etc
-      this.emit('gameRounds', data.map.round);
-      this.emit('gameCTscore', data.map.team_ct);
-      this.emit('gameTscore', data.map.team_t);
-      this.emit('roundWins', data.map.round_wins);
+  process(state: Partial<GameState>) {
+    if (!this.prevState?.map && state.map) {
+      log.info(`[gsi] Game ${state.map.mode} on ${state.map.name} begins`);
+      this.emit('gameLive', state.map.name, state.map.mode);
+    }
+    if (state.round?.phase && state.round?.phase !== 'over') {
+      log.info(`[gsi] Round ${state.map?.round} begins`);
+      this.emit(
+        'roundPhase',
+        state.map?.name,
+        state.map?.mode,
+        state.round.phase,
+      );
     }
 
-    if (data.player) {
-      this.emit('player', data.player);
-    }
-
-    if (data.round) {
-      this.emit('roundPhase', data.round.phase);
-      switch (data.round.phase) {
-        case 'live':
-          break;
-        case 'freezetime':
-          break;
-        case 'over':
-          this.emit('roundWinTeam', data.round.win_team);
-          break;
-      }
-
-      if (data.round.bomb) {
-        this.emit('bombState', data.round.bomb);
-        switch (data.round.bomb) {
-          case 'planted':
-            this.emit('bombPlanted');
-            break;
-          case 'defused':
-            this.emit('bombDefused');
-            break;
-          case 'exploded':
-            this.emit('bombExploded');
-            break;
-        }
-      }
-    }
+    this.prevState = state;
   }
 }

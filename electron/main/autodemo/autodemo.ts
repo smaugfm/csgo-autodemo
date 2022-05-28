@@ -1,119 +1,115 @@
 import { NetCon } from '../netcon/NetCon';
-import log from 'electron-log';
 import path from 'path';
 import fs from 'fs';
 import TypedEmitter from 'typed-emitter';
 import { GsiEvents } from '../gsi/types';
 import EventEmitter from 'events';
-import { AutodemoEvents, modeMapToHuman } from './types';
+import { AutodemoEvents } from './types';
 import { strcmp } from '../../common/util';
 import sanitize from 'sanitize-filename';
 import { RecordingStartError } from '../netcon/types';
+import log from 'electron-log';
+
+const MAX_RETRIES = 3;
 
 export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEvents>) {
-  private mapName: string;
-  private gameMode: string;
-  private gameLive: boolean;
-  private recording = false;
   private readonly netCon: NetCon;
   private readonly csgoPath: string;
+  private retryOnNextRound = false;
+  private retryOnFreezeTime = false;
+  private retryCounter = 1;
+  private liveSkipCounter = 0;
 
   constructor(netCon: NetCon, gsi: TypedEmitter<GsiEvents>, csgoPath: string) {
     super();
-    this.mapName = '';
-    this.gameMode = '';
-    this.gameLive = false;
     this.netCon = netCon;
     this.csgoPath = csgoPath;
 
-    this.netCon.on('disconnected', () => {
-      this.gameLive = false;
-      this.mapName = '';
-      this.gameMode = '';
-      this.recording = false;
-    });
-    gsi.on('gameMap', name => {
-      log.debug(`gameMap: ${name}`);
-      this.mapName = name;
-    });
+    gsi.on('gameLive', async (mapName, gameMode) => {
+      this.resetState();
+      const demoName = await this.buildDemoName(mapName, gameMode);
+      const error = await this.netCon.recordDemo(demoName);
+      if (!error) return;
 
-    gsi.on('gameMode', mode => {
-      this.gameMode = modeMapToHuman[mode] ?? mode;
-    });
-    gsi.on('roundPhase', async phase => {
-      if (!this.recording && ['freezetime', 'live'].includes(phase)) {
-        await this.recordOrStop(this.gameLive);
+      switch (error) {
+        case RecordingStartError.Timeout:
+          this.retryOnNextRound = true;
+          break;
+        case RecordingStartError.WaitForRoundOver:
+          this.retryOnNextRound = true;
+          this.retryOnFreezeTime = true;
+          break;
+        case RecordingStartError.WrongDemoName:
+          log.warn('Unexpected wrong demo name, but the recording is on!');
+          break;
+        case RecordingStartError.AlreadyRecording:
+          break;
+      }
+      if (this.retryOnNextRound) {
+        log.info('Will retry recording on the next round');
       }
     });
-    gsi.on('gamePhase', async phase => {
-      const wasGameLive = this.updateGameLive(phase);
-
-      await this.recordOrStop(wasGameLive);
-    });
-  }
-
-  private async recordOrStop(wasGameLive: boolean) {
-    if (!this.recording) {
-      const demoName = await this.buildDemoName();
-      try {
-        const error = await this.netCon.recordDemo(demoName);
-        if (error) {
-          switch (error) {
-            case RecordingStartError.Timeout:
-              log.error(
-                'Failed to start recording due to an unexpected error (timed-out)',
-              );
-              break;
-            case RecordingStartError.WaitForRoundOver:
-              log.error(
-                'Failed to start recording this round. Will try at next one.',
-              );
-              break;
-            case RecordingStartError.WrongDemoName:
-              log.error('Recording started but with wrong demo name.');
-              break;
-            case RecordingStartError.AlreadyRecording:
-              this.recording = true;
-              break;
-          }
-        } else {
-          this.recording = true;
+    gsi.on('roundPhase', async (mapName, gameMode, phase) => {
+      if (!this.retryOnNextRound) {
+        return;
+      }
+      if (this.retryOnFreezeTime && phase === 'live') {
+        if (this.liveSkipCounter > MAX_RETRIES) {
+          log.info(
+            'It looks like there is no freezetime in this game. Aborting attempts to record.',
+          );
+          this.resetState();
+          return;
         }
-      } catch (e) {
-        log.error('Error starting recording: ', e);
+        log.info('Skipping live phase, will attempt at next freezetime.');
+        this.liveSkipCounter++;
+        return;
       }
-    } else if (wasGameLive && !this.gameLive) {
-      this.mapName = '';
-      try {
-        await this.netCon.stopRecordingDemo();
-        this.recording = false;
-      } catch (e) {
-        log.error('Error stopping recording: ', e);
+      this.liveSkipCounter = 0;
+      this.retryCounter++;
+      if (this.retryCounter > MAX_RETRIES + 1) {
+        log.info(
+          `Already tried maximum of ${MAX_RETRIES} times. Aborting attemps to record until next game.`,
+        );
+        this.resetState();
       }
-    }
+      log.info(`Recording try #${this.retryCounter}`);
+      if (!mapName || !gameMode) {
+        log.error(
+          'Round is live but mapNape or gameMode is not set!' +
+            `mapName: ${mapName}, gameMode: $${gameMode}`,
+        );
+        return;
+      }
+      const demoName = await this.buildDemoName(mapName, gameMode);
+      const error = await this.netCon.recordDemo(demoName);
+      if (!error) {
+        this.resetState();
+        return;
+      }
+      switch (error) {
+        case RecordingStartError.Timeout:
+          break;
+        case RecordingStartError.WaitForRoundOver:
+          if (phase === 'freezetime')
+            log.error(
+              'Unexpected behaviour: cannot start during freezetime ' +
+                'after specific error message to do so.',
+            );
+          break;
+        case RecordingStartError.WrongDemoName:
+          log.warn('Unexpected wrong demo name, but the recording is on!');
+          break;
+        case RecordingStartError.AlreadyRecording:
+          break;
+      }
+    });
   }
 
-  private updateGameLive(
-    phase: 'live' | 'intermission' | 'gameover' | 'warmup',
-  ) {
-    const wasGameLive = this.gameLive;
-    log.debug(`gamePhase: ${phase}`);
-
-    switch (phase) {
-      case 'live':
-        this.gameLive = true;
-        break;
-      case 'warmup':
-        this.gameLive = true;
-        break;
-      case 'intermission':
-        this.gameLive = true;
-        break;
-      case 'gameover':
-        this.gameLive = false;
-        break;
-    }
-    return wasGameLive;
+  private resetState() {
+    this.retryOnNextRound = false;
+    this.retryOnFreezeTime = false;
+    this.retryCounter = 1;
   }
 
   public get demoFileNameRegex() {
@@ -128,11 +124,11 @@ export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEv
     return path.join(this.csgoPath, demoName);
   }
 
-  async buildDemoName(): Promise<string> {
+  async buildDemoName(mapName: string, gameMode: string): Promise<string> {
     const dateString = new Date().toISOString().slice(0, 16).replace(':', '-');
     let demoName = path.join(
       this.demosFolder,
-      `${dateString}_${this.gameMode}_${this.mapName}`,
+      `${dateString}_${gameMode}_${mapName}`,
     );
     demoName = sanitize(demoName);
 
