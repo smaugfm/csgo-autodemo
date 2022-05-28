@@ -12,10 +12,11 @@ import { NetCon } from './main/netcon/NetCon';
 import { Autodemo } from './main/autodemo/autodemo';
 import { createStore } from './common/config';
 import {
-  packageJson,
+  setupInit,
   setupAboutPanel,
   setupLaunchAtLogin,
   setupMenu,
+  setupAutoUpdate,
 } from './main/misc/app';
 import {
   findSteamLocation,
@@ -24,9 +25,7 @@ import {
 import { AutodemoTray } from './main/tray/AutodemoTray';
 import { createdDummyWindow, createErrorWindow } from './main/window/window';
 
-app.setAppUserModelId(`github.${packageJson.productName}.0c75d883`);
-
-if (require('electron-squirrel-startup')) app.quit();
+setupInit();
 
 const global: Partial<{
   mainWindow: BrowserWindow;
@@ -101,6 +100,7 @@ async function createWindow() {
 app
   .whenReady()
   .then(async () => {
+    await setupAutoUpdate();
     setupConfigMain(store);
     setupIpcMain();
 
