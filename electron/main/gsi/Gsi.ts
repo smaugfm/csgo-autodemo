@@ -3,7 +3,7 @@ import log from 'electron-log';
 import EventEmitter from 'events';
 import TypedEmitter from 'typed-emitter';
 import { AddressInfo } from 'net';
-import { GsiEvents } from './types';
+import { GsiEvents, ModeMap } from './types';
 import { GameState } from 'csgo-gsi-types';
 
 export class Gsi extends (EventEmitter as new () => TypedEmitter<GsiEvents>) {
@@ -57,14 +57,14 @@ export class Gsi extends (EventEmitter as new () => TypedEmitter<GsiEvents>) {
   process(state: Partial<GameState>) {
     if (!this.prevState?.map && state.map) {
       log.info(`[gsi] Game ${state.map.mode} on ${state.map.name} begins`);
-      this.emit('gameLive', state.map.name, state.map.mode);
+      this.emit('gameLive', state.map.name, state.map.mode as ModeMap);
     }
     if (state.round?.phase && state.round?.phase !== 'over') {
       log.info(`[gsi] Round ${state.map?.round} begins`);
       this.emit(
         'roundPhase',
         state.map?.name,
-        state.map?.mode,
+        state.map?.mode as ModeMap | undefined,
         state.round.phase,
       );
     }

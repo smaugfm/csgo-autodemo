@@ -12,7 +12,7 @@ export function FailedToFindSteam(props: PropsWithChildren<unknown>) {
         <Body1>
           Failed to find Steam installation.
           <br />
-          Please ensure that you have a Steam installed on your machine.
+          Please ensure that Steam is installed on your machine.
         </Body1>
       }
     >

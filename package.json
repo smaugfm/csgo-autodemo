@@ -8,11 +8,12 @@
   "version": "0.0.1",
   "scripts": {
     "start": "electron-forge start",
-    "release": "yarn icons && electron-forge publish",
+    "release": "yarn icons && electron-forge publish && yarn cleanup-release",
     "tsc": "tsc",
     "make": "yarn icons && electron-forge make",
     "test": "webpack --config webpack/test.webpack.js && node .webpack/test/test.js",
     "icons": "node icon-other.js && icon-gen -i assets/app.svg -o ./assets --icns --icns-name app --ico --ico-name app",
+    "cleanup-release": "node cleanup-release.js",
     "lint": "eslint . --fix --ext '.js,.jsx,.ts,.tsx' && tsc",
     "prepare": "husky install",
     "pre-commit": "lint-staged && tsc"

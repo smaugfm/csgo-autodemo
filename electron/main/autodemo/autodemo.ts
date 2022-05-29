@@ -2,9 +2,9 @@ import { NetCon } from '../netcon/NetCon';
 import path from 'path';
 import fs from 'fs';
 import TypedEmitter from 'typed-emitter';
-import { GsiEvents } from '../gsi/types';
+import { GsiEvents, ModeMap } from '../gsi/types';
 import EventEmitter from 'events';
-import { AutodemoEvents } from './types';
+import { AutodemoEvents, modeMapToHuman } from './types';
 import { strcmp } from '../../common/util';
 import sanitize from 'sanitize-filename';
 import { RecordingStartError } from '../netcon/types';
@@ -29,7 +29,9 @@ export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEv
       this.resetState();
       const demoName = await this.buildDemoName(mapName, gameMode);
       const error = await this.netCon.recordDemo(demoName);
-      if (!error) return;
+      if (!error) {
+        this.emit('recordingStarted', `${demoName}.dem`);
+      }
 
       switch (error) {
         case RecordingStartError.Timeout:
@@ -84,6 +86,7 @@ export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEv
       const demoName = await this.buildDemoName(mapName, gameMode);
       const error = await this.netCon.recordDemo(demoName);
       if (!error) {
+        this.emit('recordingStarted', `${demoName}.dem`);
         this.resetState();
         return;
       }
@@ -112,10 +115,6 @@ export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEv
     this.retryCounter = 1;
   }
 
-  public get demoFileNameRegex() {
-    return /^\d\d\d\d-\d\d-\d\dT\d\d-\d\d_\w+_\w+(_\d+)?\.dem$/;
-  }
-
   get demosFolder() {
     return 'autodemo';
   }
@@ -124,13 +123,12 @@ export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEv
     return path.join(this.csgoPath, demoName);
   }
 
-  async buildDemoName(mapName: string, gameMode: string): Promise<string> {
+  async buildDemoName(mapName: string, gameMode: ModeMap): Promise<string> {
     const dateString = new Date().toISOString().slice(0, 16).replace(':', '-');
     let demoName = path.join(
       this.demosFolder,
-      `${dateString}_${gameMode}_${mapName}`,
+      sanitize(`${dateString}_${modeMapToHuman[gameMode]}_${mapName}`),
     );
-    demoName = sanitize(demoName);
 
     let fullDemoPath = this.fullDemoPath(demoName);
     let i = 0;
@@ -139,7 +137,11 @@ export class Autodemo extends (EventEmitter as new () => TypedEmitter<AutodemoEv
       fullDemoPath = this.fullDemoPath(demoName);
     }
 
-    return demoName;
+    return demoName.toLowerCase();
+  }
+
+  public get demoFileNameRegex() {
+    return /^\d\d\d\d-\d\d-\d\d[tT]\d\d-\d\d_\w+_\w+(.+)?\.dem$/;
   }
 
   existingDemos(ascending: boolean): string[] {

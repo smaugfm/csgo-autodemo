@@ -9,5 +9,4 @@ export const modeMapToHuman: Record<ModeMap, string> = {
 
 export type AutodemoEvents = {
   recordingStarted: (demoName: string) => void;
-  recordingStopped: () => void;
 };

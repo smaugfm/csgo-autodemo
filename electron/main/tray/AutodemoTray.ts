@@ -10,18 +10,14 @@ import { Autodemo } from '../autodemo/autodemo';
 import fs from 'fs';
 import path from 'path';
 import { assetsPath, packageJson } from '../misc/app';
-
-type RecentDemo = {
-  name: string;
-  fullPath: string;
-};
+import { delay } from '../../common/util';
 
 export class AutodemoTray {
   private readonly tray: Tray;
   private readonly csgoPath?: string;
   private readonly autodemo?: Autodemo;
-  private readonly recentDemos: RecentDemo[];
-  private readonly menu: Electron.Menu;
+  private readonly recentDemos: string[];
+  private readonly maxRecentDemos = 10;
 
   constructor(csgoPath?: string, autodemo?: Autodemo) {
     const icon =
@@ -38,19 +34,19 @@ export class AutodemoTray {
     this.autodemo = autodemo;
     this.tray = new Tray(icon);
     this.recentDemos = this.lookForInitialDemos();
-    this.menu = this.createMenu();
+    this.recreateMenu();
 
     autodemo?.on('recordingStarted', async demoName => {
       await this.addNewDemoToRecent(demoName);
     });
 
     this.tray.setToolTip(packageJson.productName);
-    this.tray.setContextMenu(this.menu);
   }
 
   async addNewDemoToRecent(demoName: string) {
     if (!this.csgoPath) return;
 
+    await delay(100);
     const fullPath = path.join(this.csgoPath, demoName);
     try {
       await fs.promises.stat(fullPath);
@@ -59,38 +55,25 @@ export class AutodemoTray {
       log.error(e);
       return;
     }
-    this.recentDemos.pop();
-    this.recentDemos.unshift({
-      name: demoName,
-      fullPath,
-    });
-    const recent = this.menu.getMenuItemById('recent');
-    if (recent && this.csgoPath) {
-      recent.submenu = Menu.buildFromTemplate(
-        this.buildRecentDemosSubmenu(this.csgoPath),
-      );
-      this.tray.setContextMenu(this.menu);
+    if (this.recentDemos.length === this.maxRecentDemos) {
+      this.recentDemos.pop();
+      this.recentDemos.unshift(fullPath);
     }
+    this.recreateMenu();
   }
 
-  lookForInitialDemos(): RecentDemo[] {
+  lookForInitialDemos(): string[] {
     if (!this.autodemo) return [];
 
-    return this.autodemo
-      .existingDemos(false)
-      .slice(0, 10)
-      .map(x => ({
-        name: path.parse(x).base,
-        fullPath: x,
-      }));
+    return this.autodemo.existingDemos(false).slice(0, this.maxRecentDemos);
   }
 
-  createMenu() {
+  recreateMenu() {
     const recentSubmenu = this.csgoPath
       ? this.buildRecentDemosSubmenu(this.csgoPath)
       : [];
 
-    return Menu.buildFromTemplate([
+    const menu = Menu.buildFromTemplate([
       { label: 'About Autodemo', role: 'about' },
       { type: 'separator' },
       {
@@ -106,18 +89,20 @@ export class AutodemoTray {
       { type: 'separator' },
       { label: 'Quit Autodemo', role: 'quit' },
     ]);
+
+    this.tray.setContextMenu(menu);
   }
 
   buildRecentDemosSubmenu(csgoPath: string): MenuItemConstructorOptions[] {
-    const items: MenuItemConstructorOptions[] = this.recentDemos.map(i => ({
-      label: i.name,
-      click: () => shell.showItemInFolder(i.fullPath),
+    const items: MenuItemConstructorOptions[] = this.recentDemos.map(x => ({
+      label: path.parse(x).name,
+      click: () => shell.showItemInFolder(x),
     }));
     items.unshift({
       label: 'Open Demos Location',
       click: () =>
         shell.showItemInFolder(
-          this.recentDemos?.[0]?.fullPath ??
+          this.recentDemos?.[0] ??
             path.join(csgoPath, this.autodemo?.demosFolder ?? 'bin'),
         ),
     });

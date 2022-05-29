@@ -159,6 +159,13 @@ export class NetCon extends (EventEmitter as new () => TypedEmitter<NetConEvents
   private async sendCommand(command: string, waitFor?: SendOptions['waitFor']) {
     if (!this.connection) {
       log.info(`[netcon]: cannot send command ${command} as socket is null`);
+      log.info('Waiting 10 seconds for connection...');
+      await Promise.any([
+        new Promise<void>(resolve => {
+          this.on('connected', resolve);
+        }),
+        delay(10000),
+      ]);
       return;
     }
     try {
