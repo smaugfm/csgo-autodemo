@@ -5,7 +5,7 @@
   "owner": "smaug-fm",
   "description": "An app that allows you to automatically record POV demos of all your CS:GO games",
   "main": "./.webpack/main",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "scripts": {
     "start": "electron-forge start",
     "release": "yarn icons && electron-forge publish && yarn cleanup-release",
